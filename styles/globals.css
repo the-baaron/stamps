@@ -42,13 +42,3 @@ section {
   border-radius: 8px;
   border: 1px solid #00000005;
 }
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
-  body {
-    color: white;
-    background: black;
-  }
-}
