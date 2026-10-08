@@ -1,6 +1,6 @@
 import Head from "next/head";
 import React, { useState } from "react";
-import posthog from "posthog-js";
+import { track } from "helpers/track";
 import styles from "../styles/Home.module.css";
 
 import { allowedFonts } from "helpers/generateSVG/types";
@@ -205,7 +205,7 @@ export default function Home() {
   const [preset, setPreset] = useState<Preset>();
 
   const openInPlayground = (path: string) => {
-    posthog.capture("example opened", { path });
+    track("example_opened", { path });
     setPreset({ settings: parseStampPath(path), id: Date.now() });
     document.getElementById("playground")?.scrollIntoView({ behavior: "smooth" });
   };
@@ -239,7 +239,7 @@ export default function Home() {
             rel="noreferrer"
             target="_blank"
             className={styles.coffee}
-            onClick={() => posthog.capture("coffee clicked")}
+            onClick={() => track("coffee_clicked")}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={`${API}${COFFEE_STAMP}`} alt="Buy me a coffee" />

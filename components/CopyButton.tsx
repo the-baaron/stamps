@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import posthog from "posthog-js";
+import { track } from "helpers/track";
 import styles from "../styles/Home.module.css";
 
 export const CopyButton: React.FC<{
@@ -14,7 +14,7 @@ export const CopyButton: React.FC<{
       className={styles.copyButton}
       onClick={() =>
         navigator.clipboard.writeText(value).then(() => {
-          posthog.capture("snippet copied", { format, snippet: value });
+          track("snippet_copied", { format, snippet: value });
           setCopied(true);
           setTimeout(() => setCopied(false), 1400);
         })

@@ -1,6 +1,6 @@
 import type { NextApiRequest } from "next";
 import { waitUntil } from "@vercel/functions";
-import { POSTHOG_HOST, POSTHOG_KEY } from "./analytics";
+import { OPENPANEL_API, OPENPANEL_CLIENT_ID } from "./analytics";
 
 const header = (req: NextApiRequest, name: string) => {
   const value = req.headers[name];
@@ -25,11 +25,12 @@ const sourceOf = (userAgent = "", referrerHost?: string) => {
   return "unknown";
 };
 
-// Records one render in PostHog without touching the response: no cookies,
+// Records one render in OpenPanel without touching the response: no cookies,
 // no headers, nothing in the SVG. Sent after the image, never blocking it.
 export const trackRender = (req: NextApiRequest) => {
   try {
-    if (process.env.VERCEL_ENV !== "production") return;
+    const secret = process.env.OPENPANEL_CLIENT_SECRET;
+    if (process.env.VERCEL_ENV !== "production" || !secret) return;
     const referrer = header(req, "referer");
     const referrerHost = hostOf(referrer);
     // The site's own previews and examples are covered by site analytics.
@@ -39,29 +40,36 @@ export const trackRender = (req: NextApiRequest) => {
     const source = sourceOf(userAgent, referrerHost);
 
     const body = JSON.stringify({
-      api_key: POSTHOG_KEY,
-      event: "stamp rendered",
-      distinct_id: `stamps:${referrerHost ?? source}`,
-      properties: {
-        app: "stamps",
-        text,
-        ...Object.fromEntries(
-          Object.entries(params).map(([k, v]) => [`param_${k}`, v])
-        ),
-        source,
-        referrer,
-        referrer_host: referrerHost,
-        user_agent: userAgent,
-        country: header(req, "x-vercel-ip-country"),
-        // The request IP is Vercel's or GitHub's, not the viewer's.
-        $geoip_disable: true,
-        $process_person_profile: false,
+      type: "track",
+      payload: {
+        name: "stamp_rendered",
+        properties: {
+          text,
+          ...Object.fromEntries(
+            Object.entries(params).map(([k, v]) => [`param_${k}`, v])
+          ),
+          source,
+          referrer,
+          referrer_host: referrerHost,
+          country: header(req, "x-vercel-ip-country"),
+        },
       },
     });
 
-    const sent = fetch(`${POSTHOG_HOST}/i/v0/e/`, {
+    // Forward the viewer's IP and browser so OpenPanel's location and device
+    // stats describe the viewer (or GitHub's proxy), not Vercel.
+    const viewerIp = header(req, "x-forwarded-for")?.split(",")[0].trim();
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "openpanel-client-id": OPENPANEL_CLIENT_ID,
+      "openpanel-client-secret": secret,
+    };
+    if (viewerIp) headers["openpanel-client-ip"] = viewerIp;
+    if (userAgent) headers["user-agent"] = userAgent;
+
+    const sent = fetch(`${OPENPANEL_API}/track`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body,
       signal: AbortSignal.timeout(3000),
     }).catch(() => undefined);
