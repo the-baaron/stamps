@@ -1,263 +1,323 @@
-/* eslint-disable @next/next/no-img-element */
 import Head from "next/head";
+import React, { useState } from "react";
 import styles from "../styles/Home.module.css";
 
 import { allowedFonts } from "helpers/generateSVG/types";
-import { Example } from "components/Example";
-import { Playground } from "components/Playground";
-import { Color } from "components/Color";
+import { API, parseStampPath } from "helpers/stamp";
+import { Playground, Preset } from "components/Playground";
+import { Snippet } from "components/Snippet";
+import { Stamp } from "components/Stamp";
+
+const fonts = Object.keys(allowedFonts).filter((v) => isNaN(Number(v)));
+
+const heroStamps = [
+  "Read%20the%20docs?icon=book&backgroundColor=121212&padding=10&borderRadius=6",
+  "Download?icon=download&backgroundColor=E5484D&padding=10&borderRadius=6",
+  "Star%20on%20GitHub?icon=github&backgroundColor=white&color=121212&borderWidth=1&borderColor=121212&padding=10&borderRadius=6",
+  "Sponsor?icon=heart&iconStyle=regular&backgroundColor=FFE4E1&color=C2185B&padding=10&borderRadius=20",
+  "Live%20demo?icon=arrow-right&iconPosition=after&backgroundColor=0794e0&padding=10&borderRadius=6",
+];
+
+const gallery = [
+  "Example?borderWidth=2&borderColor=2B303A&backgroundColor=white&color=2B303A",
+  "Example?backgroundColor=BAC1B8&color=2B303A&borderRadius=0&fontSize=20&fontFamily=courier%20new",
+  "Example?backgroundColor=0C7C59&color=white&borderRadius=50&fontFamily=andale%20mono",
+  "Example?borderRadius=16&fontFamily=comic%20sans%20ms&backgroundColor=FF7F51",
+  "Button%20with%20a%20very%20long%20text%20in%20it?backgroundColor=eee&borderWidth=1&borderColor=ccc&color=000",
+  "Install?icon=terminal&backgroundColor=1E1E1E&color=7CFC9A&fontFamily=courier%20new&padding=10&borderRadius=4",
+  "Discord?icon=discord&backgroundColor=5865F2&padding=10&borderRadius=8",
+  "Buy%20me%20a%20coffee?icon=mug-hot&backgroundColor=FFDD00&color=121212&padding=10&borderRadius=8",
+  "Changelog?icon=clock-rotate-left&iconStyle=solid&backgroundColor=F4F0EA&color=121212&borderWidth=1&borderColor=121212&padding=8&borderRadius=0",
+  "Next?icon=arrow-right&iconPosition=after&backgroundColor=6D28D9&padding=10&borderRadius=30",
+];
+
+interface Param {
+  names: string[];
+  defaults: string[];
+  body: React.ReactNode;
+  examples: string[];
+}
+
+const params: Param[] = [
+  {
+    names: ["fontFamily"],
+    defaults: ["helvetica"],
+    body: (
+      <>
+        One of: {fonts.map((f, i) => (
+          <React.Fragment key={f}>
+            <code>{f}</code>
+            {i < fonts.length - 1 && ", "}
+          </React.Fragment>
+        ))}
+        . Write spaces as <code>%20</code>.
+      </>
+    ),
+    examples: ["Example?fontFamily=impact"],
+  },
+  {
+    names: ["fontSize"],
+    defaults: ["14"],
+    body: "Text size in pixels. The icon scales with it.",
+    examples: ["Example?fontSize=30"],
+  },
+  {
+    names: ["borderRadius"],
+    defaults: ["4"],
+    body: "Corner rounding in pixels.",
+    examples: ["Example?borderRadius=16"],
+  },
+  {
+    names: ["backgroundColor"],
+    defaults: ["0794e0"],
+    body: (
+      <>
+        A colour name like <code>teal</code> or a hex value without the{" "}
+        <code>#</code>, like <code>C0FFEE</code>.
+      </>
+    ),
+    examples: ["Example?backgroundColor=0C7C59"],
+  },
+  {
+    names: ["color"],
+    defaults: ["white"],
+    body: "Colour of the text and the icon. Names and hex values both work.",
+    examples: ["Example?backgroundColor=2B303A&color=FFD166"],
+  },
+  {
+    names: ["borderWidth", "borderColor"],
+    defaults: ["0", "0b76b0"],
+    body: "Border thickness in pixels, and its colour.",
+    examples: ["Example?borderWidth=3&borderColor=58A4B0"],
+  },
+  {
+    names: ["padding"],
+    defaults: ["0"],
+    body: (
+      <>
+        Space around the text. When set, it replaces the four values below
+        (left and right get 4px extra).
+      </>
+    ),
+    examples: ["Example?padding=20"],
+  },
+  {
+    names: ["paddingTop", "paddingRight", "paddingBottom", "paddingLeft"],
+    defaults: ["8", "16", "8", "16"],
+    body: "Space on one side only.",
+    examples: ["Example?paddingLeft=40", "Example?paddingTop=20"],
+  },
+  {
+    names: ["icon"],
+    defaults: [""],
+    body: (
+      <>
+        Any free{" "}
+        <a href="https://fontawesome.com/search?ic=free" rel="noreferrer" target="_blank">
+          Font Awesome
+        </a>{" "}
+        icon by name. Unknown names are ignored, so the button still renders.
+      </>
+    ),
+    examples: ["Example?icon=heart", "GitHub?icon=github&backgroundColor=24292f"],
+  },
+  {
+    names: ["iconStyle"],
+    defaults: ["solid"],
+    body: (
+      <>
+        <code>solid</code>, <code>regular</code> or <code>brands</code>. If the
+        icon is not drawn in that style, another style is used.
+      </>
+    ),
+    examples: ["Example?icon=heart&iconStyle=regular"],
+  },
+  {
+    names: ["iconPosition"],
+    defaults: ["before"],
+    body: (
+      <>
+        <code>before</code> or <code>after</code> the text.
+      </>
+    ),
+    examples: ["Next?icon=arrow-right&iconPosition=after"],
+  },
+];
 
 export default function Home() {
+  const [preset, setPreset] = useState<Preset>();
+
+  const openInPlayground = (path: string) => {
+    setPreset({ settings: parseStampPath(path), id: Date.now() });
+    document.getElementById("playground")?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
-    <div className={styles.container}>
+    <div className={styles.page}>
       <Head>
-        <title>Github readme buttons</title>
-        <meta name="description" content="Generated by create next app" />
+        <title>Stamps: buttons for your README</title>
+        <meta
+          name="description"
+          content="Free, customizable SVG buttons for GitHub READMEs, Markdown files and websites, generated from a single URL."
+        />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>Github readme buttons</h1>
-
-        <p className={styles.description}>
-          Free to use, retina-ready, customizable buttons for any MarkDown file.
-          Follow the guide below, or use the button playground to create your
-          style. You can use the buttons anywhere on the web, from your blog to
-          GitHub readme files. The buttons are fully customizable by an
-          easy-to-use API.
-        </p>
-
-        <p>
-          <a href="https://baars.design/" rel="noreferrer" target="_blank">
-            <img
-              src="https://gh-stamps.vercel.app/api/About%20me?backgroundColor=0b76b0"
-              alt="About me"
-            />
+      <header className={styles.nav}>
+        <a href="#top" className={styles.logo}>
+          <span className={styles.logoMark} aria-hidden="true">S</span>
+          Stamps
+        </a>
+        <nav>
+          <a href="#playground">Playground</a>
+          <a href="#parameters">Parameters</a>
+          <a href="#examples">Examples</a>
+          <a href="https://github.com/the-baaron/stamps" rel="noreferrer" target="_blank">
+            GitHub
           </a>
-          &nbsp;
-          <a
-            href="https://github.com/Ronald-Baars/stamps/"
-            rel="noreferrer"
-            target="_blank"
-          >
-            <img
-              src="https://gh-stamps.vercel.app/api/GitHub%20repo?backgroundColor=white&borderWidth=1&color=0b76b0"
-              alt="Github repo"
-            />
-          </a>
-        </p>
+        </nav>
+      </header>
 
-        <h1>Basics</h1>
-        <p>
-          The most basic use case. Just choose the text and implement the tag in
-          your MD file. Both of the examples below are usable in your markdown
-          file, and both will give you the same result.
-        </p>
-        <Example src="Example" extensive />
-
-        <h1>Configure</h1>
-        <Playground />
-
-        <h1>Available parameters</h1>
-        <p>The following parameters are accepted:</p>
-
-        <section>
-          <h2>
-            <code>
-              <span>?</span>fontFamily<span>=helvetica</span>
-            </code>
-          </h2>
-          <p>
-            You can change the font by using the fontFamily parameter. Accepted
-            values are:
-            <br />
-            {Object.keys(allowedFonts)
-              .filter((v) => isNaN(Number(v)))
-              .map((font) => (
-                <>
-                  <code key={font}>{font}</code>,{" "}
-                </>
-              ))}
-            <br />
-            <small>
-              Make sure to replace spaces in the font&apos;s names with{" "}
-              <code>%20</code>.
-            </small>
+      <main id="top" className={styles.main}>
+        <section className={styles.hero}>
+          <span className={styles.pill}>Free · No sign-up · Retina-ready SVG</span>
+          <h1>
+            Buttons for your README,{" "}
+            <span className={styles.accent}>made from a link.</span>
+          </h1>
+          <p className={styles.lede}>
+            Put your text in a URL, add a few parameters, and paste it into any
+            Markdown file, GitHub README, blog or website. No account, no build
+            step.
           </p>
-          <Example src="Example?fontFamily=impact" />
+          <div className={styles.heroActions}>
+            <a href="#playground" className={styles.buttonPrimary}>
+              Make a button
+            </a>
+            <a href="#parameters" className={styles.buttonSecondary}>
+              See all parameters
+            </a>
+          </div>
+          <div className={styles.heroStamps}>
+            {heroStamps.map((src, i) => (
+              <Stamp
+                key={src}
+                src={src}
+                tilt={[-4, 3, -2, 4, -3][i]}
+                title="Open in the playground"
+                onClick={() => openInPlayground(src)}
+              />
+            ))}
+          </div>
+          <span className={styles.postmark} aria-hidden="true">
+            <span>Delivered</span>
+            <strong>SVG</strong>
+            <span>via URL</span>
+          </span>
         </section>
 
-        <section>
-          <h2>
-            <code>
-              <span>?</span>fontSize<span>=14</span>
-            </code>
-          </h2>
-          <p>Change the font size by using this parameter.</p>
-          <Example src="Example?fontSize=30" />
+        <section className={styles.section}>
+          <div className={styles.sectionHead}>
+            <h2>How it works</h2>
+          </div>
+          <ol className={styles.steps}>
+            <li>
+              <strong>Write your text in the link</strong>
+              <code>{API.replace("https://", "")}Example</code>
+            </li>
+            <li>
+              <strong>Add parameters after a ?</strong>
+              <code>?backgroundColor=0C7C59&amp;icon=heart</code>
+            </li>
+            <li>
+              <strong>Paste it anywhere images work</strong>
+              <code>![Button](…)</code>
+            </li>
+          </ol>
+          <div className={styles.basics}>
+            <Snippet url={`${API}Example`} />
+            <div className={styles.basicsPreview}>
+              <Stamp src="Example" />
+            </div>
+          </div>
         </section>
 
-        <section>
-          <h2>
-            <code>
-              <span>?</span>borderRadius<span>=4</span>
-            </code>
-          </h2>
-          <p>Change the rounded corners by using this parameter.</p>
-          <Example src="Example?borderRadius=16" />
+        <section className={styles.section} id="playground">
+          <div className={styles.sectionHead}>
+            <h2>Playground</h2>
+            <p>Change anything. The link and the snippets update as you go.</p>
+          </div>
+          <Playground preset={preset} />
         </section>
 
-        <section>
-          <h2>
-            <code>
-              <span>?</span>backgroundColor<span>=0794e0</span>
-            </code>
-          </h2>
-          <p>Change the background color by using this parameter.</p>
-          <Example src="Example?backgroundColor=0C7C59" />
+        <section className={styles.section} id="parameters">
+          <div className={styles.sectionHead}>
+            <h2>Parameters</h2>
+            <p>
+              Start with <code>?</code> and join more with <code>&amp;</code>.
+              Every parameter is optional.
+            </p>
+          </div>
+          <div className={styles.paramGrid}>
+            {params.map((p) => (
+              <article className={styles.paramCard} key={p.names[0]}>
+                <div className={styles.paramNames}>
+                  {p.names.map((name, i) => (
+                    <code key={name}>
+                      {name}
+                      {p.defaults[i] !== "" && <span>={p.defaults[i]}</span>}
+                    </code>
+                  ))}
+                </div>
+                <p>{p.body}</p>
+                <div className={styles.paramExamples}>
+                  {p.examples.map((src) => (
+                    <button
+                      type="button"
+                      key={src}
+                      className={styles.paramExample}
+                      onClick={() => openInPlayground(src)}
+                      title="Open in the playground"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={`${API}${src}`} alt={`Example: ${src}`} />
+                      <code>?{src.split("?")[1]}</code>
+                    </button>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
         </section>
 
-        <section>
-          <h2>
-            <code>
-              <span>?</span>color<span>=white</span>
-            </code>
-          </h2>
-          <p>
-            Change the text color by using this parameter. Accepted values are
-            html named colors and hex values.
-          </p>
-          <Example src="Example?color=BAC1B8" />
+        <section className={styles.section} id="examples">
+          <div className={styles.sectionHead}>
+            <h2>Examples</h2>
+            <p>Click one to open it in the playground.</p>
+          </div>
+          <div className={styles.gallery}>
+            {gallery.map((src, i) => (
+              <Stamp
+                key={src}
+                src={src}
+                tilt={[-2, 1.5, -1, 2, -1.5][i % 5]}
+                title="Open in the playground"
+                onClick={() => openInPlayground(src)}
+              />
+            ))}
+          </div>
         </section>
-
-        <section>
-          <h2>
-            <code>
-              <span>?</span>borderColor<span>=0b76b0</span>
-            </code>{" "}
-          </h2>
-          <h2>
-            <code>
-              <span>?</span>borderWidth<span>=0</span>
-            </code>{" "}
-          </h2>
-          <p>
-            Change the border by using the <code>borderColor</code> and{" "}
-            <code>borderWidth</code> parameters.
-          </p>
-          <Example src="Example?borderWidth=20" />
-          <Example src="Example?borderWidth=3&borderColor=58A4B0" />
-        </section>
-
-        <section>
-          <h2>
-            <code>
-              <span>?</span>padding<span>=0</span>
-            </code>{" "}
-          </h2>
-          <h2>
-            <code>
-              <span>?</span>paddingTop<span>=4</span>
-            </code>{" "}
-          </h2>
-          <h2>
-            <code>
-              <span>?</span>paddingLeft<span>=8</span>
-            </code>{" "}
-          </h2>
-          <h2>
-            <code>
-              <span>?</span>paddingRight<span>=8</span>
-            </code>{" "}
-          </h2>
-          <h2>
-            <code>
-              <span>?</span>paddingBottom<span>=4</span>
-            </code>{" "}
-          </h2>
-          <p>
-            Change the padding by using these parameters. If the{" "}
-            <code>padding</code> parameter is used, it will overwrite the
-            paddingLeft, paddingTop, paddingBottom and paddingRight parameters.
-          </p>
-          <Example src="Example?padding=20" />
-          <Example src="Example?paddingLeft=40" />
-          <Example src="Example?paddingRight=40" />
-          <Example src="Example?paddingTop=20" />
-          <Example src="Example?paddingBottom=20" />
-        </section>
-
-        <section>
-          <h2>
-            <code>
-              <span>?</span>icon<span>=heart</span>
-            </code>{" "}
-          </h2>
-          <h2>
-            <code>
-              <span>?</span>iconStyle<span>=solid</span>
-            </code>{" "}
-          </h2>
-          <h2>
-            <code>
-              <span>?</span>iconPosition<span>=before</span>
-            </code>{" "}
-          </h2>
-          <p>
-            Add any free{" "}
-            <a href="https://fontawesome.com/search?ic=free" rel="noreferrer" target="_blank">
-              Font Awesome
-            </a>{" "}
-            icon by its name. <code>iconStyle</code> accepts{" "}
-            <code>solid</code>, <code>regular</code> and <code>brands</code>.{" "}
-            <code>iconPosition</code> accepts <code>before</code> and{" "}
-            <code>after</code>. The icon takes the text color and font size.
-            <small>
-              If an icon does not exist in the chosen style, the closest
-              available style is used. Unknown icon names are ignored.
-            </small>
-          </p>
-          <Example src="Example?icon=heart" />
-          <Example src="Example?icon=heart&iconStyle=regular" />
-          <Example src="Next?icon=arrow-right&iconPosition=after" />
-          <Example src="GitHub?icon=github&backgroundColor=24292f" />
-        </section>
-
-        <h1>Examples</h1>
-        <Example src="Example?borderWidth=2&borderColor=2B303A&backgroundColor=white&color=2B303A" />
-        <Example src="Example?backgroundColor=BAC1B8&color=2B303A&borderRadius=0&fontSize=20&fontFamily=courier%20new" />
-        <Example src="Example?backgroundColor=0C7C59&color=white&borderRadius=50&fontFamily=andale%20mono" />
-        <Example src="Button%20with%20a%20very%20long%20text%20in%20it?backgroundColor=eee&borderWidth=1&borderColor=ccc&color=000" />
-        <Example src="Example?borderRadius=16&fontFamily=comic%20sans%20ms&backgroundColor=FF7F51" />
-
-        <h1>Combining parameters</h1>
-        <p>
-          Always write a <code>?</code> between the content and the first
-          parameter. If you use more than one parameter, you separate them by
-          using <code>&</code>.
-        </p>
-
-        <h1>Colors</h1>
-        <p>
-          Accepted values are html named colors and hex values.
-          <small>Hex values should be written without the hashtag.</small>
-        </p>
-        <h4>Some examples:</h4>
-        <p>
-          Named colors: <Color color="red" />, <Color color="teal" />,{" "}
-          <Color color="orange" />
-          <br />
-          Hex colors: <Color color="C0FFEE" />, <Color color="DE1E7E" />,{" "}
-          <Color color="BADA55" />
-        </p>
       </main>
 
       <footer className={styles.footer}>
         <a target="_blank" rel="noreferrer" href="https://www.baars.design/">
           Made with <span>♥</span> by baars.design
         </a>
+        <a href="https://github.com/the-baaron/stamps" rel="noreferrer" target="_blank">
+          Source on GitHub
+        </a>
       </footer>
     </div>
   );
-};
-
+}

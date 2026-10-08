@@ -62,10 +62,10 @@ export const IconPicker: React.FC<IconPickerProps> = ({
   const selected = icons?.findIcon(icon, iconStyle);
 
   // Name matches first, then Font Awesome's own keywords ("love" finds heart).
-  const search = (style: IconStyle) => {
+  const search = (style: IconStyle, text = query) => {
     if (!icons) return [];
     const list = icons.iconList(style);
-    const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const words = text.trim().toLowerCase().split(/\s+/).filter(Boolean);
     if (!words.length) return list;
     const q = words.join("-");
     const tokens = (text: string) => text.split(/[\s-]+/);
@@ -117,7 +117,17 @@ export const IconPicker: React.FC<IconPickerProps> = ({
             type="search"
             placeholder="Search icons"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              const text = e.target.value;
+              setQuery(text);
+              // Jump to a style that has matches when this one has none.
+              if (icons && !search(browseStyle, text).length) {
+                const other = (Object.keys(icons.iconStyles) as IconStyle[]).find(
+                  (style) => search(style, text).length
+                );
+                if (other) setBrowseStyle(other);
+              }
+            }}
           />
           <div className={styles.segmented}>
             {icons &&
