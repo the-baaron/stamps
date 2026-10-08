@@ -77,7 +77,7 @@ const params: Param[] = [
     ),
     examples: [
       ex("Read the essay", "fontFamily=georgia", `icon=book-open&${paper}`),
-      ex("make install", "fontFamily=courier%20new", "icon=terminal&backgroundColor=1E1E1E&color=7CFC9A&padding=10&borderRadius=6"),
+      ex("Install", "fontFamily=courier%20new", "icon=terminal&backgroundColor=1E1E1E&color=7CFC9A&padding=10&borderRadius=6"),
     ],
   },
   {
