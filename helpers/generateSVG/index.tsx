@@ -3,6 +3,7 @@ import { renderToString } from "react-dom/server";
 import pixelWidth from "string-pixel-width";
 import { Props, SvgProps } from "./types";
 import colorList from "css-color-names";
+import { findIcon } from "helpers/icons";
 
 export const defaults: Props = {
   fontFamily: "helvetica",
@@ -38,8 +39,24 @@ const Svg: React.FC<SvgProps> = (props) => {
     font: settings.fontFamily,
     size: settings.fontSize,
   });
+  const icon = findIcon(settings.icon, settings.iconStyle);
+  const iconHeight = Number(settings.fontSize);
+  const iconWidth = icon ? (iconHeight * icon.width) / icon.height : 0;
+  const hasText = `${settings.text}`.trim() !== "";
+  const iconGap = icon && hasText ? Math.round(iconHeight * 0.5) : 0;
+  const iconAfter = settings.iconPosition === "after";
+  const iconX = iconAfter
+    ? Number(settings.paddingLeft) + textWidth + iconGap
+    : Number(settings.paddingLeft);
+  const textX = iconAfter
+    ? Number(settings.paddingLeft)
+    : Number(settings.paddingLeft) + iconWidth + iconGap;
   const width =
-    textWidth + Number(settings.paddingLeft) + Number(settings.paddingRight);
+    textWidth +
+    iconWidth +
+    iconGap +
+    Number(settings.paddingLeft) +
+    Number(settings.paddingRight);
   const height =
     Number(settings.fontSize) +
     Number(settings.paddingTop) +
@@ -75,8 +92,19 @@ const Svg: React.FC<SvgProps> = (props) => {
         strokeWidth={settings.borderWidth}
         stroke={correctColor(settings.borderColor)}
       />
+      {icon && (
+        <svg
+          x={iconX}
+          y={Number(settings.paddingTop)}
+          width={iconWidth}
+          height={iconHeight}
+          viewBox={`0 0 ${icon.width} ${icon.height}`}
+        >
+          <path d={icon.path} fill={correctColor(settings.color)} />
+        </svg>
+      )}
       <text
-        x={settings.paddingLeft}
+        x={icon ? textX : settings.paddingLeft}
         y={Number(settings.paddingTop) + 1}
         textAnchor="start"
         alignmentBaseline="hanging"

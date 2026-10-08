@@ -187,6 +187,42 @@ export default function Home() {
           <Example src="Example?paddingBottom=20" />
         </section>
 
+        <section>
+          <h2>
+            <code>
+              <span>?</span>icon<span>=heart</span>
+            </code>{" "}
+          </h2>
+          <h2>
+            <code>
+              <span>?</span>iconStyle<span>=solid</span>
+            </code>{" "}
+          </h2>
+          <h2>
+            <code>
+              <span>?</span>iconPosition<span>=before</span>
+            </code>{" "}
+          </h2>
+          <p>
+            Add any free{" "}
+            <a href="https://fontawesome.com/search?ic=free" rel="noreferrer" target="_blank">
+              Font Awesome
+            </a>{" "}
+            icon by its name. <code>iconStyle</code> accepts{" "}
+            <code>solid</code>, <code>regular</code> and <code>brands</code>.{" "}
+            <code>iconPosition</code> accepts <code>before</code> and{" "}
+            <code>after</code>. The icon takes the text color and font size.
+            <small>
+              If an icon does not exist in the chosen style, the closest
+              available style is used. Unknown icon names are ignored.
+            </small>
+          </p>
+          <Example src="Example?icon=heart" />
+          <Example src="Example?icon=heart&iconStyle=regular" />
+          <Example src="Next?icon=arrow-right&iconPosition=after" />
+          <Example src="GitHub?icon=github&backgroundColor=24292f" />
+        </section>
+
         <h1>Examples</h1>
         <Example src="Example?borderWidth=2&borderColor=2B303A&backgroundColor=white&color=2B303A" />
         <Example src="Example?backgroundColor=BAC1B8&color=2B303A&borderRadius=0&fontSize=20&fontFamily=courier%20new" />

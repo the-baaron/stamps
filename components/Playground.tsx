@@ -1,7 +1,15 @@
 /* eslint-disable @next/next/no-img-element */
 import React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "../styles/Home.module.css";
+import { IconPicker } from "./IconPicker";
+import type { IconPosition, IconStyle } from "helpers/icons";
+
+const iconStyleLabels: Record<IconStyle, string> = {
+  solid: "Solid",
+  regular: "Regular",
+  brands: "Brands",
+};
 
 export const Playground: React.FC = () => {
   const [settings, setSettings] = useState({
@@ -16,18 +24,47 @@ export const Playground: React.FC = () => {
   const domain = "https://gh-stamps.vercel.app/api/";
 
   const [text, setText] = useState("Example");
+  const [icon, setIcon] = useState("");
+  const [iconStyle, setIconStyle] = useState<IconStyle>("solid");
+  const [iconPosition, setIconPosition] = useState<IconPosition>("before");
+  const [iconStyleOptions, setIconStyleOptions] = useState<IconStyle[]>([]);
 
-  const url = `${domain}${text === "" ? "%20" : text}?${Object.entries(settings)
+  useEffect(() => {
+    if (!icon) return setIconStyleOptions([]);
+    import("helpers/icons").then(({ iconStyles, iconList }) =>
+      setIconStyleOptions(
+        (Object.keys(iconStyles) as IconStyle[]).filter((s) =>
+          iconList(s).some((i) => i.name === icon)
+        )
+      )
+    );
+  }, [icon]);
+
+  // Only non-default icon params go in the URL, keeping it short.
+  const iconParams: Record<string, string> = icon
+    ? {
+        icon,
+        ...(iconStyle !== "solid" && { iconStyle }),
+        ...(iconPosition !== "before" && { iconPosition }),
+      }
+    : {};
+
+  const query = `?${Object.entries({ ...settings, ...iconParams })
     .map(
       ([key, value]: [key: string, value: string | number]) => `${key}=${value}`
     )
     .join("&")}`;
+  const path = `${text === "" ? "%20" : text}${query}`;
+  const url = `${domain}${path}`;
+  // Preview against the local API in development so unreleased params show.
+  const previewUrl =
+    process.env.NODE_ENV === "development" ? `/api/${path}` : url;
 
   return (
     <div className={styles.playground}>
       <div className={styles.playgroundLeft}>
         <div className={styles.playgroundPreview}>
-          {domain && <img src={url} alt="Changable preview of a button" />}
+          {domain && <img src={previewUrl} alt="Changable preview of a button" />}
         </div>
         <code className={styles.playgroundCode}>{url}</code>
       </div>
@@ -41,6 +78,47 @@ export const Playground: React.FC = () => {
             onChange={(e) => setText(e.target.value)}
           />
         </label>
+        <div className={styles.field}>
+          <strong>Icon:</strong>
+          <IconPicker
+            icon={icon}
+            iconStyle={iconStyle}
+            onChange={(name, style) => {
+              setIcon(name);
+              setIconStyle(style);
+            }}
+          />
+          {icon && (
+            <>
+              <strong>Icon style:</strong>
+              <div className={styles.segmented}>
+                {iconStyleOptions.map((s) => (
+                  <button
+                    type="button"
+                    key={s}
+                    aria-pressed={iconStyle === s}
+                    onClick={() => setIconStyle(s)}
+                  >
+                    {iconStyleLabels[s]}
+                  </button>
+                ))}
+              </div>
+              <strong>Icon position:</strong>
+              <div className={styles.segmented}>
+                {(["before", "after"] as IconPosition[]).map((p) => (
+                  <button
+                    type="button"
+                    key={p}
+                    aria-pressed={iconPosition === p}
+                    onClick={() => setIconPosition(p)}
+                  >
+                    {p === "before" ? "Before text" : "After text"}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
         <label>
           <strong>Font size:</strong> {settings.fontSize}px
           <input

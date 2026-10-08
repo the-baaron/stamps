@@ -36,5 +36,8 @@ export interface Props {
 
 export interface SvgProps extends Partial<Props> {
   text?: string | string[];
+  icon?: string | string[];
+  iconStyle?: string | string[];
+  iconPosition?: string | string[];
 }
 
