@@ -1,5 +1,6 @@
 import Head from "next/head";
 import React, { useState } from "react";
+import posthog from "posthog-js";
 import styles from "../styles/Home.module.css";
 
 import { allowedFonts } from "helpers/generateSVG/types";
@@ -7,6 +8,10 @@ import { API, parseStampPath } from "helpers/stamp";
 import { Playground, Preset } from "components/Playground";
 import { Snippet } from "components/Snippet";
 import { Stamp } from "components/Stamp";
+
+const DONATE_URL = "https://www.paypal.com/donate/?hosted_button_id=GEVLMP9A5FQM6";
+const COFFEE_STAMP =
+  "Buy%20me%20a%20coffee?icon=mug-hot&backgroundColor=FFDD00&color=121212&padding=10&borderRadius=8";
 
 const fonts = Object.keys(allowedFonts).filter((v) => isNaN(Number(v)));
 
@@ -31,11 +36,28 @@ const gallery = [
   "Next?icon=arrow-right&iconPosition=after&backgroundColor=6D28D9&padding=10&borderRadius=30",
 ];
 
+interface ParamExample {
+  // The part of the URL the card is about, shown next to the button.
+  show: string;
+  src: string;
+}
+
+// A real-looking button: label, the params being shown, then its styling.
+const ex = (label: string, show: string, style: string): ParamExample => ({
+  show,
+  src: `${encodeURIComponent(label)}?${show}&${style}`,
+});
+
+const ink = "backgroundColor=121212&color=white&padding=10&borderRadius=6";
+const red = "backgroundColor=E5484D&color=white&padding=10&borderRadius=6";
+const paper =
+  "backgroundColor=F4F0EA&color=121212&borderWidth=1&borderColor=121212&padding=10&borderRadius=6";
+
 interface Param {
   names: string[];
   defaults: string[];
   body: React.ReactNode;
-  examples: string[];
+  examples: ParamExample[];
 }
 
 const params: Param[] = [
@@ -53,19 +75,30 @@ const params: Param[] = [
         . Write spaces as <code>%20</code>.
       </>
     ),
-    examples: ["Example?fontFamily=impact"],
+    examples: [
+      ex("Read the essay", "fontFamily=georgia", `icon=book-open&${paper}`),
+      ex("make install", "fontFamily=courier%20new", "icon=terminal&backgroundColor=1E1E1E&color=7CFC9A&padding=10&borderRadius=6"),
+    ],
   },
   {
     names: ["fontSize"],
     defaults: ["14"],
     body: "Text size in pixels. The icon scales with it.",
-    examples: ["Example?fontSize=30"],
+    examples: [
+      ex("Download", "fontSize=12", `icon=download&${red}`),
+      ex("Download", "fontSize=16", `icon=download&${red}`),
+      ex("Download", "fontSize=22", `icon=download&${red}`),
+    ],
   },
   {
     names: ["borderRadius"],
     defaults: ["4"],
     body: "Corner rounding in pixels.",
-    examples: ["Example?borderRadius=16"],
+    examples: [
+      ex("Subscribe", "borderRadius=0", "icon=bell&backgroundColor=121212&padding=10"),
+      ex("Subscribe", "borderRadius=8", "icon=bell&backgroundColor=121212&padding=10"),
+      ex("Subscribe", "borderRadius=30", "icon=bell&backgroundColor=121212&padding=10"),
+    ],
   },
   {
     names: ["backgroundColor"],
@@ -76,19 +109,28 @@ const params: Param[] = [
         <code>#</code>, like <code>C0FFEE</code>.
       </>
     ),
-    examples: ["Example?backgroundColor=0C7C59"],
+    examples: [
+      ex("Live demo", "backgroundColor=E5484D", "icon=play&padding=10&borderRadius=6"),
+      ex("Live demo", "backgroundColor=teal", "icon=play&padding=10&borderRadius=6"),
+    ],
   },
   {
     names: ["color"],
     defaults: ["white"],
     body: "Colour of the text and the icon. Names and hex values both work.",
-    examples: ["Example?backgroundColor=2B303A&color=FFD166"],
+    examples: [
+      ex("Star on GitHub", "color=FFD166", "icon=star&backgroundColor=121212&padding=10&borderRadius=6"),
+      ex("Report a bug", "color=E5484D", "icon=bug&backgroundColor=FFF1F1&padding=10&borderRadius=6"),
+    ],
   },
   {
     names: ["borderWidth", "borderColor"],
     defaults: ["0", "0b76b0"],
     body: "Border thickness in pixels, and its colour.",
-    examples: ["Example?borderWidth=3&borderColor=58A4B0"],
+    examples: [
+      ex("Changelog", "borderWidth=2&borderColor=121212", "icon=clock-rotate-left&backgroundColor=white&color=121212&padding=10&borderRadius=6"),
+      ex("Breaking change", "borderWidth=2&borderColor=E5484D", "icon=triangle-exclamation&backgroundColor=FFF1F1&color=C9363B&padding=10&borderRadius=6"),
+    ],
   },
   {
     names: ["padding"],
@@ -99,13 +141,19 @@ const params: Param[] = [
         (left and right get 4px extra).
       </>
     ),
-    examples: ["Example?padding=20"],
+    examples: [
+      ex("v2.4.0", "padding=3", "icon=code-branch&backgroundColor=F4F0EA&color=121212&borderRadius=4&fontFamily=courier%20new"),
+      ex("Get started", "padding=14", `icon=rocket&backgroundColor=E5484D&borderRadius=8`),
+    ],
   },
   {
     names: ["paddingTop", "paddingRight", "paddingBottom", "paddingLeft"],
     defaults: ["8", "16", "8", "16"],
     body: "Space on one side only.",
-    examples: ["Example?paddingLeft=40", "Example?paddingTop=20"],
+    examples: [
+      ex("Join the beta", "paddingLeft=32&paddingRight=32", "backgroundColor=121212&paddingTop=10&paddingBottom=10&borderRadius=30"),
+      ex("Docs", "paddingLeft=6&paddingRight=10", "icon=book&backgroundColor=F4F0EA&color=121212&paddingTop=6&paddingBottom=6&borderRadius=4"),
+    ],
   },
   {
     names: ["icon"],
@@ -119,7 +167,10 @@ const params: Param[] = [
         icon by name. Unknown names are ignored, so the button still renders.
       </>
     ),
-    examples: ["Example?icon=heart", "GitHub?icon=github&backgroundColor=24292f"],
+    examples: [
+      ex("Discord", "icon=discord", "backgroundColor=5865F2&padding=10&borderRadius=6"),
+      ex("Download for macOS", "icon=apple", ink),
+    ],
   },
   {
     names: ["iconStyle"],
@@ -130,7 +181,10 @@ const params: Param[] = [
         icon is not drawn in that style, another style is used.
       </>
     ),
-    examples: ["Example?icon=heart&iconStyle=regular"],
+    examples: [
+      ex("Favourite", "iconStyle=solid", "icon=heart&backgroundColor=FFE4E1&color=C2185B&padding=10&borderRadius=30"),
+      ex("Favourite", "iconStyle=regular", "icon=heart&backgroundColor=FFE4E1&color=C2185B&padding=10&borderRadius=30"),
+    ],
   },
   {
     names: ["iconPosition"],
@@ -140,7 +194,10 @@ const params: Param[] = [
         <code>before</code> or <code>after</code> the text.
       </>
     ),
-    examples: ["Next?icon=arrow-right&iconPosition=after"],
+    examples: [
+      ex("Back", "iconPosition=before", `icon=arrow-left&${paper}`),
+      ex("Continue", "iconPosition=after", `icon=arrow-right&${red}`),
+    ],
   },
 ];
 
@@ -148,6 +205,7 @@ export default function Home() {
   const [preset, setPreset] = useState<Preset>();
 
   const openInPlayground = (path: string) => {
+    posthog.capture("example opened", { path });
     setPreset({ settings: parseStampPath(path), id: Date.now() });
     document.getElementById("playground")?.scrollIntoView({ behavior: "smooth" });
   };
@@ -175,6 +233,16 @@ export default function Home() {
           <a href="#examples">Examples</a>
           <a href="https://github.com/the-baaron/stamps" rel="noreferrer" target="_blank">
             GitHub
+          </a>
+          <a
+            href={DONATE_URL}
+            rel="noreferrer"
+            target="_blank"
+            className={styles.coffee}
+            onClick={() => posthog.capture("coffee clicked")}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`${API}${COFFEE_STAMP}`} alt="Buy me a coffee" />
           </a>
         </nav>
       </header>
@@ -272,7 +340,7 @@ export default function Home() {
                 </div>
                 <p>{p.body}</p>
                 <div className={styles.paramExamples}>
-                  {p.examples.map((src) => (
+                  {p.examples.map(({ src, show }) => (
                     <button
                       type="button"
                       key={src}
@@ -281,8 +349,20 @@ export default function Home() {
                       title="Open in the playground"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={`${API}${src}`} alt={`Example: ${src}`} />
-                      <code>?{src.split("?")[1]}</code>
+                      <img src={`${API}${src}`} alt={`Example with ${show}`} />
+                      <code>
+                        {show.split("&").map((part, i) => (
+                          <React.Fragment key={part}>
+                            {i > 0 && (
+                              <>
+                                &amp;
+                                <wbr />
+                              </>
+                            )}
+                            <span>{part}</span>
+                          </React.Fragment>
+                        ))}
+                      </code>
                     </button>
                   ))}
                 </div>

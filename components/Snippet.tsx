@@ -35,7 +35,7 @@ export const Snippet: React.FC<{ url: string; initial?: Format }> = ({
             </button>
           ))}
         </div>
-        <CopyButton value={code} />
+        <CopyButton value={code} format={format} />
       </div>
       <pre className={styles.snippetCode}>{code}</pre>
     </div>

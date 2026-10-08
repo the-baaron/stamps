@@ -61,8 +61,30 @@
   font-weight: 600;
 }
 
+.nav nav {
+  align-items: center;
+}
+
 .nav nav a {
   text-decoration: none;
+}
+
+.coffee {
+  display: inline-flex;
+  margin-left: 4px;
+  border-radius: 8px;
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.coffee:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.coffee img {
+  display: block;
+  height: 34px;
 }
 
 .nav nav a:hover {
@@ -803,6 +825,7 @@ button.stamp {
   display: flex;
   align-items: center;
   gap: 14px;
+  min-height: 62px;
   width: 100%;
   min-width: 0;
   padding: 10px 12px;
@@ -819,16 +842,20 @@ button.stamp {
 
 .paramExample img {
   flex: none;
-  max-width: 55%;
+  max-width: 60%;
 }
 
 .paramExample code {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  margin-left: auto;
+  text-align: right;
+  overflow-wrap: anywhere;
   color: var(--ink-muted);
   font-size: 0.75rem;
+}
+
+.paramExample code span {
+  white-space: nowrap;
 }
 
 /* Examples */
@@ -924,7 +951,7 @@ button.stamp {
     font-size: 0.85rem;
   }
 
-  .nav nav a:nth-child(n + 3) {
+  .nav nav a:not(.coffee) {
     display: none;
   }
 
