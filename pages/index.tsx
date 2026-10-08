@@ -19,21 +19,21 @@ const heroStamps = [
   "Read%20the%20docs?icon=book&backgroundColor=121212&padding=10&borderRadius=6",
   "Download?icon=download&backgroundColor=E5484D&padding=10&borderRadius=6",
   "Star%20on%20GitHub?icon=github&backgroundColor=white&color=121212&borderWidth=1&borderColor=121212&padding=10&borderRadius=6",
-  "Sponsor?icon=heart&iconStyle=regular&backgroundColor=FFE4E1&color=C2185B&padding=10&borderRadius=20",
+  "Sponsor?icon=heart&iconStyle=regular&backgroundColor=FFE4E1&color=C2185B&padding=10&borderRadius=17",
   "Live%20demo?icon=arrow-right&iconPosition=after&backgroundColor=0794e0&padding=10&borderRadius=6",
 ];
 
 const gallery = [
   "Example?borderWidth=2&borderColor=2B303A&backgroundColor=white&color=2B303A",
   "Example?backgroundColor=BAC1B8&color=2B303A&borderRadius=0&fontSize=20&fontFamily=courier%20new",
-  "Example?backgroundColor=0C7C59&color=white&borderRadius=50&fontFamily=andale%20mono",
+  "Example?backgroundColor=0C7C59&color=white&borderRadius=15&fontFamily=andale%20mono",
   "Example?borderRadius=16&fontFamily=comic%20sans%20ms&backgroundColor=FF7F51",
   "Button%20with%20a%20very%20long%20text%20in%20it?backgroundColor=eee&borderWidth=1&borderColor=ccc&color=000",
   "Install?icon=terminal&backgroundColor=1E1E1E&color=7CFC9A&fontFamily=courier%20new&padding=10&borderRadius=4",
   "Discord?icon=discord&backgroundColor=5865F2&padding=10&borderRadius=8",
   "Buy%20me%20a%20coffee?icon=mug-hot&backgroundColor=FFDD00&color=121212&padding=10&borderRadius=8",
   "Changelog?icon=clock-rotate-left&iconStyle=solid&backgroundColor=F4F0EA&color=121212&borderWidth=1&borderColor=121212&padding=8&borderRadius=0",
-  "Next?icon=arrow-right&iconPosition=after&backgroundColor=6D28D9&padding=10&borderRadius=30",
+  "Next?icon=arrow-right&iconPosition=after&backgroundColor=6D28D9&padding=10&borderRadius=17",
 ];
 
 interface ParamExample {
@@ -97,7 +97,7 @@ const params: Param[] = [
     examples: [
       ex("Subscribe", "borderRadius=0", "icon=bell&backgroundColor=121212&padding=10"),
       ex("Subscribe", "borderRadius=8", "icon=bell&backgroundColor=121212&padding=10"),
-      ex("Subscribe", "borderRadius=30", "icon=bell&backgroundColor=121212&padding=10"),
+      ex("Subscribe", "borderRadius=17", "icon=bell&backgroundColor=121212&padding=10"),
     ],
   },
   {
@@ -151,7 +151,7 @@ const params: Param[] = [
     defaults: ["8", "16", "8", "16"],
     body: "Space on one side only.",
     examples: [
-      ex("Join the beta", "paddingLeft=32&paddingRight=32", "backgroundColor=121212&paddingTop=10&paddingBottom=10&borderRadius=30"),
+      ex("Join the beta", "paddingLeft=32&paddingRight=32", "backgroundColor=121212&paddingTop=10&paddingBottom=10&borderRadius=17"),
       ex("Docs", "paddingLeft=6&paddingRight=10", "icon=book&backgroundColor=F4F0EA&color=121212&paddingTop=6&paddingBottom=6&borderRadius=4"),
     ],
   },
@@ -182,8 +182,8 @@ const params: Param[] = [
       </>
     ),
     examples: [
-      ex("Favourite", "iconStyle=solid", "icon=heart&backgroundColor=FFE4E1&color=C2185B&padding=10&borderRadius=30"),
-      ex("Favourite", "iconStyle=regular", "icon=heart&backgroundColor=FFE4E1&color=C2185B&padding=10&borderRadius=30"),
+      ex("Favourite", "iconStyle=solid", "icon=heart&backgroundColor=FFE4E1&color=C2185B&padding=10&borderRadius=17"),
+      ex("Favourite", "iconStyle=regular", "icon=heart&backgroundColor=FFE4E1&color=C2185B&padding=10&borderRadius=17"),
     ],
   },
   {
