@@ -346,6 +346,8 @@
 
 .iconGrid button {
   aspect-ratio: 1;
+  content-visibility: auto;
+  contain-intrinsic-size: 40px;
   display: flex;
   align-items: center;
   justify-content: center;

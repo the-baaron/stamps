@@ -4,8 +4,6 @@ import type { IconEntry, IconStyle } from "helpers/icons";
 
 type IconsModule = typeof import("helpers/icons");
 
-const MAX_RESULTS = 400;
-
 const IconGlyph: React.FC<{ icon: IconEntry }> = ({ icon }) => (
   <svg viewBox={`0 0 ${icon.width} ${icon.height}`} aria-hidden="true">
     <path d={icon.path} fill="currentColor" />
@@ -108,7 +106,7 @@ export const IconPicker: React.FC<IconPickerProps> = ({
           <div className={styles.iconGrid}>
             {!icons && <p>Loading icons…</p>}
             {icons && results.length === 0 && <p>No icons found.</p>}
-            {results.slice(0, MAX_RESULTS).map((i) => (
+            {results.map((i) => (
               <button
                 type="button"
                 key={i.name}
@@ -125,9 +123,7 @@ export const IconPicker: React.FC<IconPickerProps> = ({
           </div>
           <div className={styles.iconPickerFooter}>
             <span>
-              {results.length > MAX_RESULTS
-                ? `Showing ${MAX_RESULTS} of ${results.length}, search to narrow`
-                : `${results.length} icons`}
+              {results.length} icons
             </span>
             {icon && (
               <button
