@@ -338,7 +338,7 @@
   align-content: start;
 }
 
-.iconGrid p {
+.iconGridNote {
   grid-column: 1 / -1;
   margin: 8px 0;
   color: #999999;
