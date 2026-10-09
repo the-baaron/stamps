@@ -483,10 +483,7 @@ button.stamp {
 .canvas {
   position: relative;
   flex: 1;
-  display: grid;
-  place-items: center;
   min-height: 380px;
-  padding: 48px 24px;
   overflow: hidden;
   background-color: #fff;
   background-image: linear-gradient(var(--paper-deep) 1px, transparent 1px),
@@ -496,9 +493,65 @@ button.stamp {
   border-radius: 12px;
 }
 
-.canvas img {
-  max-width: 100%;
-  height: auto;
+/* Scrolls when the zoomed button outgrows the canvas. "safe" centring keeps
+   the start of an oversized button reachable instead of cut off. */
+.canvasViewport {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: safe center;
+  justify-content: safe center;
+  padding: 48px 24px 56px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.canvasViewport img {
+  flex: none;
+  max-width: none;
+}
+
+.zoomControls {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 1;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.zoomControls button {
+  min-width: 28px;
+  height: 26px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.zoomControls button:hover:not(:disabled) {
+  background: var(--paper-deep);
+}
+
+.zoomControls button:disabled {
+  color: var(--rule);
+  cursor: default;
+}
+
+.zoomControls .zoomValue {
+  min-width: 48px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .canvasLabel {

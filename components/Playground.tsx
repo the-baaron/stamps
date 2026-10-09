@@ -1,9 +1,9 @@
-/* eslint-disable @next/next/no-img-element */
 import React, { useEffect, useRef, useState } from "react";
 import colorList from "css-color-names";
 import styles from "../styles/Home.module.css";
 import { IconPicker } from "./IconPicker";
 import { Snippet } from "./Snippet";
+import { ZoomCanvas } from "./ZoomCanvas";
 import { allowedFonts } from "helpers/generateSVG/types";
 import type { IconPosition, IconStyle } from "helpers/icons";
 import {
@@ -303,18 +303,7 @@ export const Playground: React.FC<{ preset?: Preset }> = ({ preset }) => {
   return (
     <div className={styles.playground}>
       <div className={styles.playgroundMain}>
-        <div className={styles.canvas}>
-          <span className={styles.canvasLabel}>Live preview</span>
-          {/* Shown at 2x: it is an SVG, so it stays sharp. */}
-          <img
-            src={previewUrl}
-            alt="Preview of your button"
-            onLoad={(e) => {
-              const img = e.currentTarget;
-              img.style.width = `${img.naturalWidth * 2}px`;
-            }}
-          />
-        </div>
+        <ZoomCanvas src={previewUrl} alt="Preview of your button" />
         <Snippet url={url} initial="URL" />
       </div>
 
