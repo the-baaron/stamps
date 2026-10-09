@@ -124,6 +124,33 @@ const Svg: React.FC<SvgProps> = (props) => {
   );
 };
 
+// XML comments may not contain "--", so the banner must stay free of it.
+const banner = [
+  "         888                                                  d8b",
+  "         888                                                  Y8P",
+  "         888",
+  ".d8888b  888888  8888b.  88888b.d88b.  88888b.  .d8888b      8888 .d8888b       .d88b.  888d888 .d88b.",
+  "88K      888        \"88b 888 \"888 \"88b 888 \"88b 88K          \"888 88K          d88\"\"88b 888P\"  d88P\"88b",
+  "\"Y8888b. 888    .d888888 888  888  888 888  888 \"Y8888b.      888 \"Y8888b.     888  888 888    888  888",
+  "     X88 Y88b.  888  888 888  888  888 888 d88P      X88      888      X88     Y88..88P 888    Y88b 888",
+  " 88888P'  \"Y888 \"Y888888 888  888  888 88888P\"   88888P'  88  888  88888P'  88  \"Y88P\"  888     \"Y88888",
+  "                                       888                    888                                   888",
+  "                                       888                   d88P                              Y8b d88P",
+  "                                       888                 888P\"                                \"Y88P\"",
+].join("\n");
+
+// Font Awesome's attribution lives in a comment in its own SVG files. We embed
+// only the path, so carry the attribution over when a stamp uses an icon.
+const iconAttribution =
+  "Icon: Font Awesome Free by @fontawesome - https://fontawesome.com\n" +
+  "License - https://fontawesome.com/license/free (Icons: CC BY 4.0)\n" +
+  "Copyright Fonticons, Inc.";
+
 export default function generateSVG(props: SvgProps) {
-  return renderToString(<Svg {...props} />);
+  const svg = renderToString(<Svg {...props} />);
+  const hasIcon = !!findIcon(props.icon, props.iconStyle);
+  const comment = ["Created with", banner, hasIcon && `\n${iconAttribution}`]
+    .filter(Boolean)
+    .join("\n");
+  return `<!--\n${comment}\n-->\n${svg}`;
 }

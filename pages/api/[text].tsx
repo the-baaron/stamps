@@ -7,7 +7,7 @@ export default function handler(
   res: NextApiResponse<string>
 ) {
   const svg = generateSVG(req.query);
-  res.setHeader("Content-Type", "image/svg+xml");
+  res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
   res.status(200).send(svg);
   trackRender(req);
 }
