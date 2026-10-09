@@ -313,7 +313,7 @@ export default function Home() {
           Stamps
         </a>
         <nav>
-          <a href="#playground">Playground</a>
+          <a href="#playground">Build</a>
           <a href="#parameters">Parameters</a>
           <a href="#examples">Examples</a>
           <a href="https://github.com/the-baaron/stamps" rel="noreferrer" target="_blank">
@@ -358,7 +358,7 @@ export default function Home() {
                 key={src}
                 src={src}
                 tilt={[-4, 3, -2, 4, -3][i]}
-                title="Open in the playground"
+                title="Open in the builder"
                 onClick={() => openInPlayground(src)}
               />
             ))}
@@ -368,6 +368,14 @@ export default function Home() {
             <strong>SVG</strong>
             <span>via URL</span>
           </span>
+        </section>
+
+        <section className={styles.section} id="playground">
+          <div className={styles.sectionHead}>
+            <h2>Build your button</h2>
+            <p>Change anything. The link and the snippets update as you go.</p>
+          </div>
+          <Playground preset={preset} />
         </section>
 
         <section className={styles.section}>
@@ -394,14 +402,6 @@ export default function Home() {
               <Stamp src="Example" />
             </div>
           </div>
-        </section>
-
-        <section className={styles.section} id="playground">
-          <div className={styles.sectionHead}>
-            <h2>Playground</h2>
-            <p>Change anything. The link and the snippets update as you go.</p>
-          </div>
-          <Playground preset={preset} />
         </section>
 
         <section className={styles.section} id="parameters">
@@ -431,7 +431,7 @@ export default function Home() {
                       key={src}
                       className={styles.paramExample}
                       onClick={() => openInPlayground(src)}
-                      title="Open in the playground"
+                      title="Open in the builder"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={`${API}${src}`} alt={`Example with ${show}`} />
@@ -470,7 +470,7 @@ export default function Home() {
         <section className={styles.section} id="examples">
           <div className={styles.sectionHead}>
             <h2>Examples</h2>
-            <p>Click one to open it in the playground.</p>
+            <p>Click one to open it in the builder.</p>
           </div>
           <div className={styles.gallery}>
             {gallery.map((src, i) => (
@@ -478,7 +478,7 @@ export default function Home() {
                 key={src}
                 src={src}
                 tilt={[-2, 1.5, -1, 2, -1.5][i % 5]}
-                title="Open in the playground"
+                title="Open in the builder"
                 onClick={() => openInPlayground(src)}
               />
             ))}
