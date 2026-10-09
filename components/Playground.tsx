@@ -72,6 +72,16 @@ const icons = {
 const clamp = (n: number, min?: number, max?: number) =>
   Math.min(max ?? Infinity, Math.max(min ?? -Infinity, n));
 
+// Up and down arrows step a number by one, or by ten with shift.
+const arrowStep = (
+  e: React.KeyboardEvent,
+  apply: (direction: number, multiplier: number) => void
+) => {
+  if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+  e.preventDefault();
+  apply(e.key === "ArrowUp" ? 1 : -1, e.shiftKey ? 10 : 1);
+};
+
 // A compact number field. Drag its label sideways to scrub the value, or use
 // the arrow keys (with shift for steps of ten), as in Figma.
 const NumField: React.FC<{
@@ -83,11 +93,13 @@ const NumField: React.FC<{
   max?: number;
   step?: number;
   placeholder?: string;
-}> = ({ label, title, value, onChange, min, max, step = 1, placeholder }) => {
+  // What an empty ("Auto") value renders as, so stepping starts from there.
+  auto?: number;
+}> = ({ label, title, value, onChange, min, max, step = 1, placeholder, auto = 0 }) => {
   const drag = useRef<{ x: number; start: number } | null>(null);
   const round = (n: number) => String(Math.round(n / step) * step);
-  const nudge = (by: number) =>
-    onChange(round(clamp((Number(value) || 0) + by, min, max)));
+  const current = value === "" ? auto : Number(value) || 0;
+  const nudge = (by: number) => onChange(round(clamp(current + by, min, max)));
 
   return (
     <label className={`${styles.numField} ${styles.tip}`} data-tip={title}>
@@ -96,7 +108,7 @@ const NumField: React.FC<{
         onPointerDown={(e) => {
           e.preventDefault();
           e.currentTarget.setPointerCapture(e.pointerId);
-          drag.current = { x: e.clientX, start: Number(value) || 0 };
+          drag.current = { x: e.clientX, start: current };
         }}
         onPointerMove={(e) => {
           if (!drag.current) return;
@@ -114,12 +126,7 @@ const NumField: React.FC<{
         placeholder={placeholder}
         aria-label={title}
         onChange={(e) => onChange(e.target.value.replace(/[^0-9.-]/g, ""))}
-        onKeyDown={(e) => {
-          if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
-          e.preventDefault();
-          const by = (e.shiftKey ? 10 : 1) * step;
-          nudge(e.key === "ArrowUp" ? by : -by);
-        }}
+        onKeyDown={(e) => arrowStep(e, (dir, times) => nudge(dir * times * step))}
       />
     </label>
   );
@@ -173,6 +180,9 @@ const ColorRow: React.FC<{
           aria-label={`${title} opacity`}
           value={value ? alpha : ""}
           disabled={!value}
+          onKeyDown={(e) =>
+            arrowStep(e, (dir, times) => onChange(withAlpha(hex, clamp(alpha + dir * times, 0, 100))))
+          }
           onChange={(e) =>
             onChange(withAlpha(hex, clamp(Number(e.target.value.replace(/\D/g, "")), 0, 100)))
           }
@@ -361,7 +371,7 @@ export const Playground: React.FC<{ preset?: Preset }> = ({ preset }) => {
 
         <Section title="Layout">
           <div className={styles.grid3}>
-            <NumField label={icons.padding} title="Padding (empty: 8 / 16 default)" value={s.padding} min={0} max={60} placeholder="Auto" onChange={set("padding")} />
+            <NumField label={icons.padding} title="Padding (empty: 8 / 16 default)" value={s.padding} min={0} max={60} placeholder="Auto" auto={8} onChange={set("padding")} />
             <NumField label={icons.radius} title="Corner radius" value={s.borderRadius} min={0} max={60} onChange={set("borderRadius")} />
             <NumField label={icons.minWidth} title="Minimum width" value={s.minWidth} min={0} max={600} onChange={set("minWidth")} />
           </div>
@@ -448,8 +458,8 @@ export const Playground: React.FC<{ preset?: Preset }> = ({ preset }) => {
                     title: p === "before" ? "Icon before the text" : "Icon after the text",
                   }))}
                 />
-                <NumField label={icons.iconSize} title="Icon size (empty: matches the text)" value={s.iconSize} min={1} max={80} placeholder="Auto" onChange={set("iconSize")} />
-                <NumField label={icons.iconGap} title="Space between icon and text" value={s.iconSpacing} min={0} max={60} placeholder="Auto" onChange={set("iconSpacing")} />
+                <NumField label={icons.iconSize} title="Icon size (empty: matches the text)" value={s.iconSize} min={1} max={80} placeholder="Auto" auto={Number(s.fontSize) || 14} onChange={set("iconSize")} />
+                <NumField label={icons.iconGap} title="Space between icon and text" value={s.iconSpacing} min={0} max={60} placeholder="Auto" auto={Math.round((Number(s.fontSize) || 14) * 0.5)} onChange={set("iconSpacing")} />
               </div>
               {s.iconColor ? (
                 <ColorRow title="Icon colour" value={s.iconColor} onChange={set("iconColor")} onRemove={() => set("iconColor")("")} />
