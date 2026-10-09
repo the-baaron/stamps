@@ -20,10 +20,58 @@ export const defaults: Props = {
   padding: 0,
 };
 
-const correctColor = (color?: string) => {
-  if (!color) return "red";
+// A query param as text, or "" when it is missing.
+const str = (value: unknown) =>
+  `${(Array.isArray(value) ? value[0] : value) ?? ""}`.trim();
 
-  return colorList.hasOwnProperty(color) ? color : `#${color}`;
+// A query param as a number, or the fallback when it is missing or not one.
+const num = (value: unknown, fallback: number) => {
+  const n = Number(Array.isArray(value) ? value[0] : value);
+  return value === undefined || value === "" || isNaN(n) ? fallback : n;
+};
+
+interface Paint {
+  color: string;
+  opacity?: number;
+}
+
+// A colour name, "transparent", or hex without the # in RGB, RGBA, RRGGBB or
+// RRGGBBAA. Alpha comes out as a separate opacity, which more SVG renderers
+// understand than 8-digit hex.
+const parseColor = (value: unknown, fallback = "red"): Paint => {
+  const v = str(value);
+  if (!v) return { color: fallback };
+  if (v.toLowerCase() === "transparent") return { color: "#000000", opacity: 0 };
+  if (colorList.hasOwnProperty(v)) return { color: v };
+  if (/^[0-9a-f]{3,4}$|^[0-9a-f]{6}$|^[0-9a-f]{8}$/i.test(v)) {
+    const hex = v.length <= 4 ? v.replace(/./g, "$&$&") : v;
+    const alpha = hex.length === 8 ? parseInt(hex.slice(6), 16) / 255 : 1;
+    return {
+      color: `#${hex.slice(0, 6)}`,
+      opacity: alpha < 1 ? Math.round(alpha * 1000) / 1000 : undefined,
+    };
+  }
+  return { color: `#${v}` };
+};
+
+const fill = (p: Paint) => ({ fill: p.color, fillOpacity: p.opacity });
+const stroke = (p: Paint) => ({ stroke: p.color, strokeOpacity: p.opacity });
+
+// CSS gradient angles: 0 points up, 90 right, 180 (the default) down.
+const gradientLine = (angle: number) => {
+  const rad = (angle * Math.PI) / 180;
+  const dx = Math.sin(rad) / 2;
+  const dy = -Math.cos(rad) / 2;
+  const r = (n: number) => Math.round(n * 1000) / 1000;
+  return { x1: r(0.5 - dx), y1: r(0.5 - dy), x2: r(0.5 + dx), y2: r(0.5 + dy) };
+};
+
+const applyTransform = (text: string, transform: string) => {
+  if (transform === "uppercase") return text.toUpperCase();
+  if (transform === "lowercase") return text.toLowerCase();
+  if (transform === "capitalize")
+    return text.replace(/(^|\s)(\S)/g, (_, space, c) => space + c.toUpperCase());
+  return text;
 };
 
 const Svg: React.FC<SvgProps> = (props) => {
@@ -34,40 +82,68 @@ const Svg: React.FC<SvgProps> = (props) => {
     settings.paddingRight = Number(settings.padding) + 4;
     settings.paddingLeft = Number(settings.padding) + 4;
   }
+  const fontSize = Number(settings.fontSize);
+  const paddingLeft = Number(settings.paddingLeft);
+  const paddingTop = Number(settings.paddingTop);
+  const text = applyTransform(`${settings.text}`, str(settings.textTransform));
+  const weight = str(settings.fontWeight).toLowerCase();
+  const fontWeight = /^(normal|bold|[1-9]00)$/.test(weight) ? weight : undefined;
+  const bold = weight === "bold" || Number(weight) >= 600;
+  const letterSpacing = num(settings.letterSpacing, 0);
   const textRef = useRef<SVGTextElement>(null);
-  const textWidth = pixelWidth(`${settings.text}`, {
-    font: settings.fontFamily,
-    size: settings.fontSize,
-  });
+  // Browsers add letter spacing after the last character too. Leaving that
+  // gap out of the width keeps the label centred; it falls in the padding.
+  const textWidth =
+    pixelWidth(text, { font: settings.fontFamily, size: fontSize, bold }) +
+    letterSpacing * Math.max(0, Array.from(text).length - 1);
   const icon = findIcon(settings.icon, settings.iconStyle);
-  const iconHeight = Number(settings.fontSize);
+  const iconHeight = icon ? Math.max(1, num(settings.iconSize, fontSize)) : 0;
   const iconWidth = icon ? (iconHeight * icon.width) / icon.height : 0;
-  const hasText = `${settings.text}`.trim() !== "";
-  const iconGap = icon && hasText ? Math.round(iconHeight * 0.5) : 0;
+  const hasText = text.trim() !== "";
+  const iconGap =
+    icon && hasText
+      ? Math.max(0, num(settings.iconSpacing, Math.round(fontSize * 0.5)))
+      : 0;
+  const contentWidth = textWidth + iconWidth + iconGap;
+  const contentHeight = Math.max(fontSize, iconHeight);
+  const naturalWidth =
+    contentWidth + paddingLeft + Number(settings.paddingRight);
+  // A minimum width centres the content in the extra space.
+  const width = Math.max(naturalWidth, num(settings.minWidth, 0));
+  const startX = paddingLeft + (width - naturalWidth) / 2;
   const iconAfter = settings.iconPosition === "after";
-  const iconX = iconAfter
-    ? Number(settings.paddingLeft) + textWidth + iconGap
-    : Number(settings.paddingLeft);
-  const textX = iconAfter
-    ? Number(settings.paddingLeft)
-    : Number(settings.paddingLeft) + iconWidth + iconGap;
-  const width =
-    textWidth +
-    iconWidth +
-    iconGap +
-    Number(settings.paddingLeft) +
-    Number(settings.paddingRight);
-  const height =
-    Number(settings.fontSize) +
-    Number(settings.paddingTop) +
-    Number(settings.paddingBottom);
+  const iconX = iconAfter ? startX + textWidth + iconGap : startX;
+  const textX = iconAfter ? startX : startX + iconWidth + iconGap;
+  const height = contentHeight + paddingTop + Number(settings.paddingBottom);
+
+  const textPaint = parseColor(settings.color);
+  const iconPaint = str(settings.iconColor)
+    ? parseColor(settings.iconColor)
+    : textPaint;
+  // Comma-separated colours make an evenly spaced gradient.
+  const stops = str(settings.backgroundColor).split(",").map((c) => parseColor(c));
+  const hasGradient = stops.length > 1;
+
+  // The canvas grows by however far the shadow reaches past the button, so it
+  // is never clipped. A blur of b spreads roughly b pixels, as in CSS.
+  const shadowX = num(settings.shadowX, 0);
+  const shadowY = num(settings.shadowY, 0);
+  const shadowBlur = Math.max(0, num(settings.shadowBlur, 0));
+  const hasShadow = shadowX !== 0 || shadowY !== 0 || shadowBlur > 0;
+  const shadowPaint = parseColor(settings.shadowColor, "#000000");
+  const left = hasShadow ? Math.max(0, shadowBlur - shadowX) : 0;
+  const right = hasShadow ? Math.max(0, shadowBlur + shadowX) : 0;
+  const top = hasShadow ? Math.max(0, shadowBlur - shadowY) : 0;
+  const bottom = hasShadow ? Math.max(0, shadowBlur + shadowY) : 0;
+  const canvasWidth = width + left + right;
+  const canvasHeight = height + top + bottom;
 
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox={`0 0 ${width} ${height}`}
-      width={width}
-      height={height}
+      viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
+      width={canvasWidth}
+      height={canvasHeight}
       style={{ cursor: "pointer" }}
     >
       <defs>
@@ -80,46 +156,84 @@ const Svg: React.FC<SvgProps> = (props) => {
           `,
           }}
         />
+        {hasShadow && (
+          <filter
+            id="shadow"
+            filterUnits="userSpaceOnUse"
+            x={-left}
+            y={-top}
+            width={canvasWidth}
+            height={canvasHeight}
+          >
+            <feDropShadow
+              dx={shadowX}
+              dy={shadowY}
+              stdDeviation={shadowBlur / 2}
+              floodColor={shadowPaint.color}
+              floodOpacity={shadowPaint.opacity}
+            />
+          </filter>
+        )}
+        {hasGradient && (
+          <linearGradient
+            id="background"
+            {...gradientLine(num(settings.gradientAngle, 180))}
+          >
+            {stops.map((stop, i) => (
+              <stop
+                key={i}
+                offset={i / (stops.length - 1)}
+                stopColor={stop.color}
+                stopOpacity={stop.opacity}
+              />
+            ))}
+          </linearGradient>
+        )}
       </defs>
-      <rect
-        x={settings.borderWidth / 2}
-        y={settings.borderWidth / 2}
-        width={width - settings.borderWidth}
-        height={height - settings.borderWidth}
-        fill={correctColor(settings.backgroundColor)}
-        rx={settings.borderRadius - settings.borderWidth / 4}
-        ry={settings.borderRadius - settings.borderWidth / 4}
-        strokeWidth={settings.borderWidth}
-        stroke={correctColor(settings.borderColor)}
-      />
-      {icon && (
-        <svg
-          x={iconX}
-          y={Number(settings.paddingTop)}
-          width={iconWidth}
-          height={iconHeight}
-          viewBox={`0 0 ${icon.width} ${icon.height}`}
+      <g transform={hasShadow ? `translate(${left} ${top})` : undefined}>
+        <rect
+          x={settings.borderWidth / 2}
+          y={settings.borderWidth / 2}
+          width={width - settings.borderWidth}
+          height={height - settings.borderWidth}
+          {...(hasGradient ? { fill: "url(#background)" } : fill(stops[0]))}
+          rx={settings.borderRadius - settings.borderWidth / 4}
+          ry={settings.borderRadius - settings.borderWidth / 4}
+          strokeWidth={settings.borderWidth}
+          {...stroke(parseColor(settings.borderColor))}
+          filter={hasShadow ? "url(#shadow)" : undefined}
+        />
+        {icon && (
+          <svg
+            x={iconX}
+            y={paddingTop + (contentHeight - iconHeight) / 2}
+            width={iconWidth}
+            height={iconHeight}
+            viewBox={`0 0 ${icon.width} ${icon.height}`}
+          >
+            <path d={icon.path} {...fill(iconPaint)} />
+          </svg>
+        )}
+        <text
+          x={textX}
+          y={paddingTop + (contentHeight - fontSize) / 2 + 1}
+          textAnchor="start"
+          alignmentBaseline="hanging"
+          ref={textRef}
+          {...fill(textPaint)}
+          style={{
+            fontFamily: `${settings.fontFamily}, helvetica`,
+            fontSize: settings.fontSize,
+            fontWeight,
+            letterSpacing: letterSpacing || undefined,
+            userSelect: "none",
+            cursor: "inherit",
+            pointerEvents: "none",
+          }}
         >
-          <path d={icon.path} fill={correctColor(settings.color)} />
-        </svg>
-      )}
-      <text
-        x={icon ? textX : settings.paddingLeft}
-        y={Number(settings.paddingTop) + 1}
-        textAnchor="start"
-        alignmentBaseline="hanging"
-        ref={textRef}
-        fill={correctColor(settings.color)}
-        style={{
-          fontFamily: `${settings.fontFamily}, helvetica`,
-          fontSize: settings.fontSize,
-          userSelect: "none",
-          cursor: "inherit",
-          pointerEvents: "none",
-        }}
-      >
-        {settings.text}
-      </text>
+          {text}
+        </text>
+      </g>
     </svg>
   );
 };
@@ -149,7 +263,7 @@ const iconAttribution =
 export default function generateSVG(props: SvgProps) {
   const svg = renderToString(<Svg {...props} />);
   const hasIcon = !!findIcon(props.icon, props.iconStyle);
-  const comment = ["Created with", banner, hasIcon && `\n${iconAttribution}`]
+  const comment = ["Created with\n", banner, hasIcon && `\n\n\n${iconAttribution}`]
     .filter(Boolean)
     .join("\n");
   return `<!--\n${comment}\n-->\n${svg}`;

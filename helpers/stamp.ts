@@ -14,6 +14,18 @@ export interface StampSettings {
   icon: string;
   iconStyle: string;
   iconPosition: string;
+  iconSpacing: string;
+  shadowX: string;
+  shadowY: string;
+  shadowBlur: string;
+  shadowColor: string;
+  iconColor: string;
+  iconSize: string;
+  fontWeight: string;
+  letterSpacing: string;
+  textTransform: string;
+  minWidth: string;
+  gradientAngle: string;
 }
 
 export const playgroundDefaults: StampSettings = {
@@ -29,6 +41,18 @@ export const playgroundDefaults: StampSettings = {
   icon: "",
   iconStyle: "solid",
   iconPosition: "before",
+  iconSpacing: "",
+  shadowX: "0",
+  shadowY: "0",
+  shadowBlur: "0",
+  shadowColor: "00000040",
+  iconColor: "",
+  iconSize: "",
+  fontWeight: "normal",
+  letterSpacing: "0",
+  textTransform: "none",
+  minWidth: "0",
+  gradientAngle: "180",
 };
 
 // Params left out of the URL when they hold the API's own default.
@@ -37,7 +61,21 @@ const apiDefaults: Partial<StampSettings> = {
   icon: "",
   iconStyle: "solid",
   iconPosition: "before",
+  shadowX: "0",
+  shadowY: "0",
+  shadowBlur: "0",
+  shadowColor: "00000040",
+  iconColor: "",
+  iconSize: "",
+  fontWeight: "normal",
+  letterSpacing: "0",
+  textTransform: "none",
+  minWidth: "0",
+  gradientAngle: "180",
 };
+
+const hasShadow = (s: StampSettings) =>
+  [s.shadowX, s.shadowY, s.shadowBlur].some((v) => v !== "" && Number(v) !== 0);
 
 export const stampPath = (s: StampSettings) => {
   const { text, ...params } = s;
@@ -45,9 +83,13 @@ export const stampPath = (s: StampSettings) => {
     .filter(([key, value]) => {
       if (value === "") return false;
       if (!s.icon && key.startsWith("icon")) return false;
+      if (!hasShadow(s) && key.startsWith("shadow")) return false;
+      if (key === "gradientAngle" && !s.backgroundColor.includes(","))
+        return false;
       return apiDefaults[key as keyof StampSettings] !== value;
     })
-    .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+    // Commas stay readable: they separate gradient colours.
+    .map(([key, value]) => `${key}=${encodeURIComponent(value).replace(/%2C/g, ",")}`)
     .join("&");
   const label = text === "" ? "%20" : encodeURIComponent(text);
   return query ? `${label}?${query}` : label;

@@ -460,7 +460,7 @@ button.stamp {
 
 .playground {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr) 300px;
   background: #fff;
   border: 2px solid var(--ink);
   border-radius: 16px;
@@ -511,111 +511,260 @@ button.stamp {
   color: var(--ink-muted);
 }
 
-.controls {
+/* Playground panel: compact rows in the manner of Figma's sidebar */
+
+.panel {
   display: flex;
   flex-direction: column;
-  padding: 8px 22px 22px;
-}
-
-.controls fieldset {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin: 0;
-  padding: 18px 0;
-  border: 0;
-  border-bottom: 2px dashed var(--rule);
-}
-
-.controls fieldset:last-child {
-  border-bottom: 0;
-}
-
-.controls legend {
-  float: left;
-  width: 100%;
-  margin-bottom: 2px;
-  font-family: var(--mono);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-.controls label {
-  display: block;
-}
-
-.fieldLabel {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 6px;
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-
-.fieldLabel span {
-  color: var(--ink-muted);
-  font-family: var(--mono);
-  font-weight: 500;
   font-size: 0.8rem;
 }
 
-.controls input[type="text"],
-.controls select {
-  display: block;
-  width: 100%;
-  padding: 9px 12px;
-  background: #fff;
-  border: 2px solid var(--ink);
-  border-radius: 8px;
-  font-size: 0.92rem;
-}
-
-.controls select {
-  text-transform: capitalize;
-}
-
-.slider input {
-  display: block;
-  width: 100%;
-  margin: 0;
-  accent-color: var(--ink);
-}
-
-.colorField .colorInputs {
+.panelSection {
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px 12px;
+  border-bottom: 1px solid var(--rule);
 }
 
-.colorInputs input[type="color"] {
-  flex: none;
-  width: 42px;
-  height: 40px;
-  padding: 0;
-  border: 2px solid var(--ink);
-  border-radius: 8px;
-  background: none;
+.panelSection:last-child {
+  border-bottom: 0;
+}
+
+.panelSection header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 24px;
+}
+
+.panelSection h3 {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.grid2,
+.grid3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.grid3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.borderRow {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 6px;
+}
+
+/* Every control is the same 28px-high, borderless field until focused. */
+.textInput,
+.selectInput,
+.numField,
+.colorRow,
+.segmentedSmall,
+.panel .iconPickerButton {
+  height: 28px;
+  background: var(--paper-deep);
+  border: 1px solid transparent;
+  border-radius: 6px;
+}
+
+.textInput,
+.selectInput {
+  width: 100%;
+  min-width: 0;
+  padding: 0 8px;
+  font-size: 0.8rem;
+}
+
+.selectInput {
+  text-transform: capitalize;
   cursor: pointer;
-  overflow: hidden;
 }
 
-.colorInputs input[type="color"]::-webkit-color-swatch-wrapper {
-  padding: 0;
+.textInput:hover,
+.selectInput:hover,
+.numField:hover,
+.colorRow:hover {
+  border-color: var(--rule);
 }
 
-.colorInputs input[type="color"]::-webkit-color-swatch {
+.textInput:focus,
+.selectInput:focus,
+.numField:focus-within,
+.colorRow:focus-within {
+  border-color: var(--ink);
+  background: #fff;
+  outline: none;
+}
+
+.numField {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.numLabel {
+  flex: none;
+  min-width: 26px;
+  padding: 0 4px 0 8px;
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+  cursor: ew-resize;
+  user-select: none;
+  touch-action: none;
+}
+
+.numField input,
+.colorRow input[type="text"] {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0 6px 0 0;
   border: 0;
-}
-
-.colorInputs input[type="color"]::-moz-color-swatch {
-  border: 0;
-}
-
-.controls .colorInputs input[type="text"] {
+  background: transparent;
   font-family: var(--mono);
-  font-size: 0.85rem;
+  font-size: 0.76rem;
+  outline: none;
+}
+
+.colorRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 5px;
+  min-width: 0;
+}
+
+.swatch {
+  position: relative;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  overflow: hidden;
+  /* A checkerboard under the colour shows its transparency. */
+  background: repeating-conic-gradient(#ccc 0 25%, #fff 0 50%) 0 0 / 8px 8px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+
+.swatch span {
+  position: absolute;
+  inset: 0;
+}
+
+.swatch input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.hexInput {
+  flex: 1;
+}
+
+.alphaInput {
+  display: flex;
+  align-items: center;
+  flex: none;
+  width: 52px;
+  height: 100%;
+  padding-left: 6px;
+  border-left: 1px solid var(--rule);
+  color: var(--ink-muted);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+}
+
+.alphaInput input {
+  text-align: right;
+}
+
+.alphaInput span {
+  padding-right: 6px;
+}
+
+.iconButton {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.iconButton:hover {
+  background: var(--paper-deep);
+}
+
+.colorRow .iconButton:hover {
+  background: var(--rule);
+}
+
+.addRow {
+  height: 28px;
+  padding: 0 8px;
+  border: 1px dashed var(--rule);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 0.76rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.addRow:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.segmentedSmall {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  min-width: 0;
+}
+
+.segmentedSmall button {
+  flex: 1;
+  min-width: 0;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.segmentedSmall button[aria-pressed="true"] {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 0 0 1px var(--rule);
+}
+
+.panel .iconPickerButton {
+  padding: 0 8px;
+  font-size: 0.8rem;
+}
+
+.panel .iconPickerGlyph {
+  width: 14px;
+  height: 14px;
 }
 
 .segmented {
@@ -976,8 +1125,7 @@ button.stamp {
     padding: 24px 12px;
   }
 
-  .playgroundMain,
-  .controls {
+  .playgroundMain {
     padding-left: 14px;
     padding-right: 14px;
   }

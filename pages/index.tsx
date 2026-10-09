@@ -91,6 +91,34 @@ const params: Param[] = [
     ],
   },
   {
+    names: ["fontWeight"],
+    defaults: ["normal"],
+    body: (
+      <>
+        <code>normal</code>, <code>bold</code> or a number from{" "}
+        <code>100</code> to <code>900</code>.
+      </>
+    ),
+    examples: [
+      ex("Sign up", "fontWeight=normal", `icon=user-plus&${ink}`),
+      ex("Sign up", "fontWeight=bold", `icon=user-plus&${ink}`),
+    ],
+  },
+  {
+    names: ["letterSpacing", "textTransform"],
+    defaults: ["0", "none"],
+    body: (
+      <>
+        Extra space between letters in pixels, and <code>uppercase</code>,{" "}
+        <code>lowercase</code> or <code>capitalize</code>.
+      </>
+    ),
+    examples: [
+      ex("New release", "letterSpacing=1.5&textTransform=uppercase", "fontSize=11&fontWeight=bold&backgroundColor=121212&padding=8&borderRadius=4"),
+      ex("read the docs", "textTransform=capitalize", `icon=book&${paper}`),
+    ],
+  },
+  {
     names: ["borderRadius"],
     defaults: ["4"],
     body: "Corner rounding in pixels.",
@@ -105,19 +133,38 @@ const params: Param[] = [
     defaults: ["0794e0"],
     body: (
       <>
-        A colour name like <code>teal</code> or a hex value without the{" "}
-        <code>#</code>, like <code>C0FFEE</code>.
+        A colour name like <code>teal</code>, <code>transparent</code>, or a
+        hex value without the <code>#</code>, like <code>C0FFEE</code>. Add two
+        digits for transparency: <code>C0FFEE80</code> is half see-through.
+        This works for every colour parameter.
       </>
     ),
     examples: [
       ex("Live demo", "backgroundColor=E5484D", "icon=play&padding=10&borderRadius=6"),
       ex("Live demo", "backgroundColor=teal", "icon=play&padding=10&borderRadius=6"),
+      ex("Live demo", "backgroundColor=E5484D40", "icon=play&color=C9363B&padding=10&borderRadius=6"),
+    ],
+  },
+  {
+    names: ["gradientAngle"],
+    defaults: ["180"],
+    body: (
+      <>
+        Give <code>backgroundColor</code> several colours, separated by
+        commas, for a gradient. The angle works as in
+        CSS: <code>0</code> runs upwards, <code>90</code> to the right,{" "}
+        <code>180</code> downwards.
+      </>
+    ),
+    examples: [
+      ex("Get started", "backgroundColor=E5484D,6D28D9", "icon=rocket&padding=10&borderRadius=6"),
+      ex("Sponsor", "backgroundColor=F59E0B,E5484D,6D28D9&gradientAngle=90", "icon=heart&fontWeight=bold&padding=10&borderRadius=17"),
     ],
   },
   {
     names: ["color"],
     defaults: ["white"],
-    body: "Colour of the text and the icon. Names and hex values both work.",
+    body: "Colour of the text, and of the icon unless iconColor is set.",
     examples: [
       ex("Star on GitHub", "color=FFD166", "icon=star&backgroundColor=121212&padding=10&borderRadius=6"),
       ex("Report a bug", "color=E5484D", "icon=bug&backgroundColor=FFF1F1&padding=10&borderRadius=6"),
@@ -153,6 +200,15 @@ const params: Param[] = [
     examples: [
       ex("Join the beta", "paddingLeft=32&paddingRight=32", "backgroundColor=121212&paddingTop=10&paddingBottom=10&borderRadius=17"),
       ex("Docs", "paddingLeft=6&paddingRight=10", "icon=book&backgroundColor=F4F0EA&color=121212&paddingTop=6&paddingBottom=6&borderRadius=4"),
+    ],
+  },
+  {
+    names: ["minWidth"],
+    defaults: ["0"],
+    body: "The narrowest the button gets, in pixels. Shorter content is centred, so a row of buttons can share one width.",
+    examples: [
+      ex("OK", "minWidth=120", `icon=check&${ink}`),
+      ex("Cancel", "minWidth=120", paper),
     ],
   },
   {
@@ -197,6 +253,38 @@ const params: Param[] = [
     examples: [
       ex("Back", "iconPosition=before", `icon=arrow-left&${paper}`),
       ex("Continue", "iconPosition=after", `icon=arrow-right&${red}`),
+    ],
+  },
+  {
+    names: ["iconSpacing"],
+    defaults: ["auto"],
+    body: "Space between the icon and the text in pixels. By default it is half the font size.",
+    examples: [
+      ex("Download", "iconSpacing=4", `icon=download&${red}`),
+      ex("Download", "iconSpacing=14", `icon=download&${red}`),
+    ],
+  },
+  {
+    names: ["iconColor", "iconSize"],
+    defaults: ["", ""],
+    body: "The icon's own colour and height in pixels. Left out, the icon matches the text colour and font size.",
+    examples: [
+      ex("Star on GitHub", "iconColor=FFD166", `icon=star&${ink}`),
+      ex("Join Discord", "iconSize=20", "icon=discord&backgroundColor=5865F2&padding=10&borderRadius=6"),
+    ],
+  },
+  {
+    names: ["shadowX", "shadowY", "shadowBlur", "shadowColor"],
+    defaults: ["0", "0", "0", "00000040"],
+    body: (
+      <>
+        A drop shadow behind the button: its offset and blur in pixels, and its
+        colour. The default is black at 25%. The image grows to fit the shadow.
+      </>
+    ),
+    examples: [
+      ex("Get started", "shadowY=2&shadowBlur=6", `icon=rocket&${red}`),
+      ex("Changelog", "shadowX=3&shadowY=3&shadowColor=121212", `icon=clock-rotate-left&${paper}`),
     ],
   },
 ];
@@ -359,7 +447,18 @@ export default function Home() {
                                 <wbr />
                               </>
                             )}
-                            <span>{part}</span>
+                            <span>
+                              {part.split(",").map((piece, j) => (
+                                <React.Fragment key={j}>
+                                  {j > 0 && (
+                                    <>
+                                      ,<wbr />
+                                    </>
+                                  )}
+                                  {piece}
+                                </React.Fragment>
+                              ))}
+                            </span>
                           </React.Fragment>
                         ))}
                       </code>
