@@ -23,7 +23,7 @@ export interface StampSettings {
   iconSize: string;
   fontWeight: string;
   letterSpacing: string;
-  textTransform: string;
+  fontStyle: string;
   minWidth: string;
   gradientAngle: string;
 }
@@ -50,7 +50,7 @@ export const playgroundDefaults: StampSettings = {
   iconSize: "",
   fontWeight: "normal",
   letterSpacing: "0",
-  textTransform: "none",
+  fontStyle: "normal",
   minWidth: "0",
   gradientAngle: "180",
 };
@@ -69,7 +69,7 @@ const apiDefaults: Partial<StampSettings> = {
   iconSize: "",
   fontWeight: "normal",
   letterSpacing: "0",
-  textTransform: "none",
+  fontStyle: "normal",
   minWidth: "0",
   gradientAngle: "180",
 };

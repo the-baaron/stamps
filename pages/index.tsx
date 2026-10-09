@@ -91,31 +91,28 @@ const params: Param[] = [
     ],
   },
   {
-    names: ["fontWeight"],
-    defaults: ["normal"],
+    names: ["fontWeight", "fontStyle"],
+    defaults: ["normal", "normal"],
     body: (
       <>
-        <code>normal</code>, <code>bold</code> or a number from{" "}
-        <code>100</code> to <code>900</code>.
+        Weight: <code>normal</code>, <code>bold</code> or a number from{" "}
+        <code>100</code> to <code>900</code>. Style: <code>normal</code> or{" "}
+        <code>italic</code>.
       </>
     ),
     examples: [
       ex("Sign up", "fontWeight=normal", `icon=user-plus&${ink}`),
       ex("Sign up", "fontWeight=bold", `icon=user-plus&${ink}`),
+      ex("Read the essay", "fontStyle=italic", `fontFamily=georgia&${paper}`),
     ],
   },
   {
-    names: ["letterSpacing", "textTransform"],
-    defaults: ["0", "none"],
-    body: (
-      <>
-        Extra space between letters in pixels, and <code>uppercase</code>,{" "}
-        <code>lowercase</code> or <code>capitalize</code>.
-      </>
-    ),
+    names: ["letterSpacing"],
+    defaults: ["0"],
+    body: "Extra space between letters in pixels. Negative values tighten the text.",
     examples: [
-      ex("New release", "letterSpacing=1.5&textTransform=uppercase", "fontSize=11&fontWeight=bold&backgroundColor=121212&padding=8&borderRadius=4"),
-      ex("read the docs", "textTransform=capitalize", `icon=book&${paper}`),
+      ex("NEW RELEASE", "letterSpacing=1.5", "fontSize=11&fontWeight=bold&backgroundColor=121212&padding=8&borderRadius=4"),
+      ex("Changelog", "letterSpacing=-0.5", `icon=clock-rotate-left&${paper}`),
     ],
   },
   {

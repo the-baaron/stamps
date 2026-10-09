@@ -89,12 +89,13 @@ const Svg: React.FC<SvgProps> = (props) => {
   const weight = str(settings.fontWeight).toLowerCase();
   const fontWeight = /^(normal|bold|[1-9]00)$/.test(weight) ? weight : undefined;
   const bold = weight === "bold" || Number(weight) >= 600;
+  const italic = str(settings.fontStyle).toLowerCase() === "italic";
   const letterSpacing = num(settings.letterSpacing, 0);
   const textRef = useRef<SVGTextElement>(null);
   // Browsers add letter spacing after the last character too. Leaving that
   // gap out of the width keeps the label centred; it falls in the padding.
   const textWidth =
-    pixelWidth(text, { font: settings.fontFamily, size: fontSize, bold }) +
+    pixelWidth(text, { font: settings.fontFamily, size: fontSize, bold, italic }) +
     letterSpacing * Math.max(0, Array.from(text).length - 1);
   const icon = findIcon(settings.icon, settings.iconStyle);
   const iconHeight = icon ? Math.max(1, num(settings.iconSize, fontSize)) : 0;
@@ -225,6 +226,7 @@ const Svg: React.FC<SvgProps> = (props) => {
             fontFamily: `${settings.fontFamily}, helvetica`,
             fontSize: settings.fontSize,
             fontWeight,
+            fontStyle: italic ? "italic" : undefined,
             letterSpacing: letterSpacing || undefined,
             userSelect: "none",
             cursor: "inherit",

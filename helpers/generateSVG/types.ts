@@ -47,6 +47,7 @@ export interface SvgProps extends Partial<Props> {
   iconColor?: string | string[];
   iconSize?: string | string[];
   fontWeight?: string | string[];
+  fontStyle?: string | string[];
   letterSpacing?: string | string[];
   textTransform?: string | string[];
   minWidth?: string | string[];

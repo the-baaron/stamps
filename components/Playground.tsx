@@ -251,6 +251,10 @@ const hasShadow = (s: StampSettings) =>
 export const Playground: React.FC<{ preset?: Preset }> = ({ preset }) => {
   const [s, setS] = useState<StampSettings>(playgroundDefaults);
   const [iconStyleOptions, setIconStyleOptions] = useState<IconStyle[]>([]);
+  // The picker shows while an icon is being chosen, before one is set.
+  const [addingIcon, setAddingIcon] = useState(false);
+  // The fill brought back by "+" after the last one was removed.
+  const lastFill = useRef(playgroundDefaults.backgroundColor);
   const set = (key: keyof StampSettings) => (value: string) =>
     setS((prev) => ({ ...prev, [key]: value }));
   const update = (patch: Partial<StampSettings>) =>
@@ -277,10 +281,13 @@ export const Playground: React.FC<{ preset?: Preset }> = ({ preset }) => {
   const previewUrl =
     process.env.NODE_ENV === "development" ? `/api/${path}` : url;
 
-  const stops = s.backgroundColor.split(",");
+  // No fill is sent as a transparent background.
+  const stops =
+    s.backgroundColor.toLowerCase() === "transparent" ? [] : s.backgroundColor.split(",");
   const setStop = (i: number, value: string) =>
     set("backgroundColor")(stops.map((c, j) => (j === i ? value : c)).join(","));
   const hasBorder = Number(s.borderWidth) > 0;
+  const bold = s.fontWeight === "bold" || Number(s.fontWeight) >= 600;
   const shadow = hasShadow(s);
 
   return (
@@ -323,28 +330,31 @@ export const Playground: React.FC<{ preset?: Preset }> = ({ preset }) => {
               </option>
             ))}
           </select>
-          <div className={styles.grid2}>
-            <select
-              className={styles.selectInput}
-              aria-label="Weight"
-              value={s.fontWeight}
-              onChange={(e) => set("fontWeight")(e.target.value)}
-            >
-              <option value="normal">Regular</option>
-              <option value="bold">Bold</option>
-            </select>
+          <div className={styles.textRow}>
+            <div className={styles.toolbar} role="group" aria-label="Text style">
+              <button
+                type="button"
+                className={styles.tip}
+                aria-label="Bold"
+                data-tip="Bold"
+                aria-pressed={bold}
+                onClick={() => set("fontWeight")(bold ? "normal" : "bold")}
+              >
+                <b>B</b>
+              </button>
+              <button
+                type="button"
+                className={styles.tip}
+                aria-label="Italic"
+                data-tip="Italic"
+                aria-pressed={s.fontStyle === "italic"}
+                onClick={() => set("fontStyle")(s.fontStyle === "italic" ? "normal" : "italic")}
+              >
+                <i>I</i>
+              </button>
+            </div>
             <NumField label={icons.fontSize} title="Font size" value={s.fontSize} min={6} max={80} onChange={set("fontSize")} />
             <NumField label={icons.letterSpacing} title="Letter spacing" value={s.letterSpacing} min={-5} max={20} step={0.5} onChange={set("letterSpacing")} />
-            <Segmented
-              value={s.textTransform}
-              onChange={set("textTransform")}
-              options={[
-                { value: "none", label: "—", title: "As typed" },
-                { value: "uppercase", label: "AA", title: "Uppercase" },
-                { value: "lowercase", label: "aa", title: "Lowercase" },
-                { value: "capitalize", label: "Aa", title: "Capitalise" },
-              ]}
-            />
           </div>
           <ColorRow title="Text colour" value={s.color} onChange={set("color")} />
         </Section>
@@ -359,11 +369,15 @@ export const Playground: React.FC<{ preset?: Preset }> = ({ preset }) => {
 
         <Section
           title="Fill"
-          action={{
-            label: "+",
-            title: "Add a gradient stop",
-            onClick: () => set("backgroundColor")(`${s.backgroundColor},${stops[stops.length - 1]}`),
-          }}
+          action={
+            stops.length
+              ? {
+                  label: "+",
+                  title: "Add a gradient stop",
+                  onClick: () => set("backgroundColor")(`${s.backgroundColor},${stops[stops.length - 1]}`),
+                }
+              : { label: "+", title: "Add a fill", onClick: () => set("backgroundColor")(lastFill.current) }
+          }
         >
           {stops.map((stop, i) => (
             <ColorRow
@@ -371,11 +385,10 @@ export const Playground: React.FC<{ preset?: Preset }> = ({ preset }) => {
               title={stops.length > 1 ? `Stop ${i + 1}` : "Background"}
               value={stop}
               onChange={(v) => setStop(i, v)}
-              onRemove={
-                stops.length > 1
-                  ? () => set("backgroundColor")(stops.filter((_, j) => j !== i).join(","))
-                  : undefined
-              }
+              onRemove={() => {
+                if (stops.length === 1) lastFill.current = stop;
+                set("backgroundColor")(stops.filter((_, j) => j !== i).join(",") || "transparent");
+              }}
             />
           ))}
           {stops.length > 1 && (
@@ -397,12 +410,23 @@ export const Playground: React.FC<{ preset?: Preset }> = ({ preset }) => {
           )}
         </Section>
 
-        <Section title="Icon">
-          <IconPicker
-            icon={s.icon}
-            iconStyle={s.iconStyle as IconStyle}
-            onChange={(icon, iconStyle) => update({ icon, iconStyle })}
-          />
+        <Section
+          title="Icon"
+          action={
+            s.icon
+              ? { label: "−", title: "Remove the icon", onClick: () => update({ icon: "" }) }
+              : { label: "+", title: "Add an icon", onClick: () => setAddingIcon(true) }
+          }
+        >
+          {(s.icon || addingIcon) && (
+            <IconPicker
+              icon={s.icon}
+              iconStyle={s.iconStyle as IconStyle}
+              defaultOpen={!s.icon}
+              onClose={() => setAddingIcon(false)}
+              onChange={(icon, iconStyle) => update({ icon, iconStyle })}
+            />
+          )}
           {s.icon && (
             <>
               <div className={styles.grid2}>

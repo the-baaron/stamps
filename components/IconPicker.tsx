@@ -21,16 +21,22 @@ interface IconPickerProps {
   icon: string;
   iconStyle: IconStyle;
   onChange: (icon: string, iconStyle: IconStyle) => void;
+  // Open the panel on mount, and hear when it closes.
+  defaultOpen?: boolean;
+  onClose?: () => void;
 }
 
 export const IconPicker: React.FC<IconPickerProps> = ({
   icon,
   iconStyle,
   onChange,
+  defaultOpen = false,
+  onClose,
 }) => {
   const [icons, setIcons] = useState<IconsModule>();
   const [terms, setTerms] = useState<SearchIndex>({});
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
+  const wasOpen = useRef(open);
   const [query, setQuery] = useState("");
   const [browseStyle, setBrowseStyle] = useState<IconStyle>(iconStyle);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -44,6 +50,12 @@ export const IconPicker: React.FC<IconPickerProps> = ({
       });
     if (open) searchRef.current?.focus();
   }, [open, icon, icons]);
+
+  useEffect(() => {
+    if (wasOpen.current && !open) onClose?.();
+    wasOpen.current = open;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;

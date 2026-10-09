@@ -557,6 +557,43 @@ button.stamp {
   grid-template-columns: 1fr 1fr 1fr;
 }
 
+.textRow {
+  display: grid;
+  grid-template-columns: auto 1fr 1fr;
+  gap: 6px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 2px;
+  height: 28px;
+  padding: 2px;
+  background: var(--paper-deep);
+  border-radius: 6px;
+}
+
+.toolbar button {
+  width: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink-muted);
+  font-family: Georgia, serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.toolbar button:hover {
+  color: var(--ink);
+}
+
+.toolbar button[aria-pressed="true"] {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 0 0 1px var(--rule);
+}
+
 .borderRow {
   display: grid;
   grid-template-columns: 64px 1fr;
@@ -761,14 +798,13 @@ button.stamp {
   box-shadow: 0 0 0 1px var(--rule);
 }
 
-/* Tooltips: instant, on hover and on keyboard focus. */
+/* Tooltips: instant, on hover and on keyboard focus (not after a click). */
 .tip {
   position: relative;
 }
 
 .tip[data-tip]:hover::after,
-.tip[data-tip]:focus-visible::after,
-.tip[data-tip]:focus-within::after {
+.tip[data-tip]:focus-visible::after {
   content: attr(data-tip);
   position: absolute;
   bottom: calc(100% + 6px);
