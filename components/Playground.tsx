@@ -47,6 +47,28 @@ const withAlpha = (hex: string, alpha: number) =>
     ? hex
     : hex + Math.round((Math.max(0, alpha) / 100) * 255).toString(16).padStart(2, "0");
 
+// 16px line icons for the field labels, drawn in the text colour.
+const Glyph: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    {children}
+  </svg>
+);
+
+const icons = {
+  fontSize: <Glyph><path d="M2 4V3h7v1M5.5 3v10M4 13h3M10 8V7.5h4V8M12 7.5V13M11 13h2" /></Glyph>,
+  letterSpacing: <Glyph><path d="M5 10l3-7 3 7M6 8h4M1.5 13.5h13M1.5 12v3M14.5 12v3" /></Glyph>,
+  padding: <Glyph><rect x="2" y="2" width="12" height="12" rx="1.5" /><rect x="5" y="5" width="6" height="6" rx="0.5" strokeDasharray="1.5 1.5" /></Glyph>,
+  radius: <Glyph><path d="M3 13V8a5 5 0 0 1 5-5h5" /></Glyph>,
+  minWidth: <Glyph><path d="M2 3v10M14 3v10M4.5 8h7M6.5 6l-2 2 2 2M9.5 6l2 2-2 2" /></Glyph>,
+  angle: <Glyph><path d="M2.5 13.5h11M2.5 13.5L11 4M7.5 13.5a5 5 0 0 0-1.6-3.7" /></Glyph>,
+  borderWidth: <Glyph><path d="M2 4h12" strokeWidth="1" /><path d="M2 8h12" strokeWidth="2" /><path d="M2 12.5h12" strokeWidth="3" /></Glyph>,
+  iconSize: <Glyph><rect x="2" y="6" width="8" height="8" rx="1" /><path d="M9 2h5v5M14 2L8.5 7.5" /></Glyph>,
+  iconGap: <Glyph><rect x="1.5" y="4" width="4" height="8" rx="1" /><rect x="10.5" y="4" width="4" height="8" rx="1" /><path d="M7 8h2" /></Glyph>,
+  shadowX: <Glyph><path d="M2 8h11M10 5l3 3-3 3" /></Glyph>,
+  shadowY: <Glyph><path d="M8 2v11M5 10l3 3 3-3" /></Glyph>,
+  blur: <Glyph><circle cx="8" cy="8" r="2.5" /><circle cx="8" cy="8" r="5.5" strokeDasharray="1.5 2" /></Glyph>,
+};
+
 const clamp = (n: number, min?: number, max?: number) =>
   Math.min(max ?? Infinity, Math.max(min ?? -Infinity, n));
 
@@ -68,7 +90,7 @@ const NumField: React.FC<{
     onChange(round(clamp((Number(value) || 0) + by, min, max)));
 
   return (
-    <label className={styles.numField} title={title}>
+    <label className={`${styles.numField} ${styles.tip}`} data-tip={title}>
       <span
         className={styles.numLabel}
         onPointerDown={(e) => {
@@ -116,7 +138,7 @@ const ColorRow: React.FC<{
 
   return (
     <div className={styles.colorRow}>
-      <label className={styles.swatch} title={`${title}: pick a colour`}>
+      <label className={`${styles.swatch} ${styles.tip}`} data-tip={`${title}: pick a colour`}>
         <span style={{ background: value ? `#${withAlpha(hex, alpha)}` : "transparent" }} />
         <input
           type="color"
@@ -144,7 +166,7 @@ const ColorRow: React.FC<{
         }}
         onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
       />
-      <label className={styles.alphaInput} title={`${title} opacity`}>
+      <label className={`${styles.alphaInput} ${styles.tip}`} data-tip={`${title} opacity`}>
         <input
           type="text"
           inputMode="numeric"
@@ -158,7 +180,13 @@ const ColorRow: React.FC<{
         <span>%</span>
       </label>
       {onRemove && (
-        <button type="button" className={styles.iconButton} onClick={onRemove} title={`Remove ${title.toLowerCase()}`}>
+        <button
+          type="button"
+          className={`${styles.iconButton} ${styles.tip}`}
+          onClick={onRemove}
+          aria-label={`Remove ${title.toLowerCase()}`}
+          data-tip={`Remove ${title.toLowerCase()}`}
+        >
           −
         </button>
       )}
@@ -175,7 +203,13 @@ const Section: React.FC<{
     <header>
       <h3>{title}</h3>
       {action && (
-        <button type="button" className={styles.iconButton} onClick={action.onClick} title={action.title}>
+        <button
+          type="button"
+          className={`${styles.iconButton} ${styles.tip}`}
+          onClick={action.onClick}
+          aria-label={action.title}
+          data-tip={action.title}
+        >
           {action.label}
         </button>
       )}
@@ -194,7 +228,9 @@ const Segmented: React.FC<{
       <button
         type="button"
         key={o.value}
-        title={o.title}
+        className={styles.tip}
+        aria-label={o.title}
+        data-tip={o.title}
         aria-pressed={value === o.value}
         onClick={() => onChange(o.value)}
       >
@@ -297,8 +333,8 @@ export const Playground: React.FC<{ preset?: Preset }> = ({ preset }) => {
               <option value="normal">Regular</option>
               <option value="bold">Bold</option>
             </select>
-            <NumField label="Aa" title="Font size" value={s.fontSize} min={6} max={80} onChange={set("fontSize")} />
-            <NumField label="|A|" title="Letter spacing" value={s.letterSpacing} min={-5} max={20} step={0.5} onChange={set("letterSpacing")} />
+            <NumField label={icons.fontSize} title="Font size" value={s.fontSize} min={6} max={80} onChange={set("fontSize")} />
+            <NumField label={icons.letterSpacing} title="Letter spacing" value={s.letterSpacing} min={-5} max={20} step={0.5} onChange={set("letterSpacing")} />
             <Segmented
               value={s.textTransform}
               onChange={set("textTransform")}
@@ -315,9 +351,9 @@ export const Playground: React.FC<{ preset?: Preset }> = ({ preset }) => {
 
         <Section title="Layout">
           <div className={styles.grid3}>
-            <NumField label="P" title="Padding (empty for the default 8 / 16)" value={s.padding} min={0} max={60} placeholder="Auto" onChange={set("padding")} />
-            <NumField label="R" title="Corner radius" value={s.borderRadius} min={0} max={60} onChange={set("borderRadius")} />
-            <NumField label="W" title="Minimum width (0 for none)" value={s.minWidth} min={0} max={600} onChange={set("minWidth")} />
+            <NumField label={icons.padding} title="Padding (empty: 8 / 16 default)" value={s.padding} min={0} max={60} placeholder="Auto" onChange={set("padding")} />
+            <NumField label={icons.radius} title="Corner radius" value={s.borderRadius} min={0} max={60} onChange={set("borderRadius")} />
+            <NumField label={icons.minWidth} title="Minimum width" value={s.minWidth} min={0} max={600} onChange={set("minWidth")} />
           </div>
         </Section>
 
@@ -344,7 +380,7 @@ export const Playground: React.FC<{ preset?: Preset }> = ({ preset }) => {
           ))}
           {stops.length > 1 && (
             <div className={styles.grid2}>
-              <NumField label="°" title="Gradient angle (0 up, 90 right, 180 down)" value={s.gradientAngle} min={0} max={360} onChange={set("gradientAngle")} />
+              <NumField label={icons.angle} title="Gradient angle: 0 up, 90 right, 180 down" value={s.gradientAngle} min={0} max={360} onChange={set("gradientAngle")} />
             </div>
           )}
         </Section>
@@ -355,7 +391,7 @@ export const Playground: React.FC<{ preset?: Preset }> = ({ preset }) => {
         >
           {hasBorder && (
             <div className={styles.borderRow}>
-              <NumField label="W" title="Border width" value={s.borderWidth} min={1} max={20} onChange={set("borderWidth")} />
+              <NumField label={icons.borderWidth} title="Border width" value={s.borderWidth} min={1} max={20} onChange={set("borderWidth")} />
               <ColorRow title="Border" value={s.borderColor} onChange={set("borderColor")} onRemove={() => set("borderWidth")("0")} />
             </div>
           )}
@@ -388,8 +424,8 @@ export const Playground: React.FC<{ preset?: Preset }> = ({ preset }) => {
                     title: p === "before" ? "Icon before the text" : "Icon after the text",
                   }))}
                 />
-                <NumField label="S" title="Icon size (empty to match the text)" value={s.iconSize} min={1} max={80} placeholder="Auto" onChange={set("iconSize")} />
-                <NumField label="Gap" title="Space between icon and text (empty for half the font size)" value={s.iconSpacing} min={0} max={60} placeholder="Auto" onChange={set("iconSpacing")} />
+                <NumField label={icons.iconSize} title="Icon size (empty: matches the text)" value={s.iconSize} min={1} max={80} placeholder="Auto" onChange={set("iconSize")} />
+                <NumField label={icons.iconGap} title="Space between icon and text" value={s.iconSpacing} min={0} max={60} placeholder="Auto" onChange={set("iconSpacing")} />
               </div>
               {s.iconColor ? (
                 <ColorRow title="Icon colour" value={s.iconColor} onChange={set("iconColor")} onRemove={() => set("iconColor")("")} />
@@ -413,9 +449,9 @@ export const Playground: React.FC<{ preset?: Preset }> = ({ preset }) => {
           {shadow && (
             <>
               <div className={styles.grid3}>
-                <NumField label="X" title="Shadow offset X" value={s.shadowX} min={-40} max={40} onChange={set("shadowX")} />
-                <NumField label="Y" title="Shadow offset Y" value={s.shadowY} min={-40} max={40} onChange={set("shadowY")} />
-                <NumField label="B" title="Shadow blur" value={s.shadowBlur} min={0} max={40} onChange={set("shadowBlur")} />
+                <NumField label={icons.shadowX} title="Shadow offset, horizontal" value={s.shadowX} min={-40} max={40} onChange={set("shadowX")} />
+                <NumField label={icons.shadowY} title="Shadow offset, vertical" value={s.shadowY} min={-40} max={40} onChange={set("shadowY")} />
+                <NumField label={icons.blur} title="Shadow blur" value={s.shadowBlur} min={0} max={40} onChange={set("shadowBlur")} />
               </div>
               <ColorRow title="Shadow colour" value={s.shadowColor} onChange={set("shadowColor")} />
             </>
