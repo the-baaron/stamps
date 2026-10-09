@@ -503,7 +503,6 @@ button.stamp {
   justify-content: safe center;
   padding: 48px 24px 56px;
   overflow: auto;
-  overscroll-behavior: contain;
 }
 
 .canvasViewport img {
@@ -545,6 +544,14 @@ button.stamp {
 .zoomControls button:disabled {
   color: var(--rule);
   cursor: default;
+}
+
+/* Right-aligned, so tooltips stay inside the canvas at its right edge. */
+.zoomControls .tip[data-tip]:hover::after,
+.zoomControls .tip[data-tip]:focus-visible::after {
+  left: auto;
+  right: 0;
+  transform: none;
 }
 
 .zoomControls .zoomValue {

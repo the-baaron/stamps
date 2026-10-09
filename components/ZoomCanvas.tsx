@@ -69,7 +69,11 @@ export const ZoomCanvas: React.FC<{ src: string; alt: string }> = ({ src, alt })
     });
 
   return (
-    <div className={styles.canvas} style={{ backgroundSize: `${20 * zoom}px ${20 * zoom}px` }}>
+    // The grid is centred, so it scales from the middle along with the button.
+    <div
+      className={styles.canvas}
+      style={{ backgroundSize: `${20 * zoom}px ${20 * zoom}px`, backgroundPosition: "center" }}
+    >
       <span className={styles.canvasLabel}>Live preview</span>
       <div className={styles.canvasViewport} ref={viewportRef}>
         <img
